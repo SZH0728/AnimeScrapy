@@ -6,14 +6,18 @@
 
 # useful for handling different item types with a single interface
 from abc import ABC, abstractmethod
-from os.path import join
+from os.path import join, dirname, abspath, normpath
+from logging import getLogger
 
 from itemadapter import ItemAdapter
 from scrapy import Spider, Item
+from scrapy.exceptions import DropItem
 from sqlalchemy.orm import scoped_session
 
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 from dbmanager import Session, NameID, Detail, Web, Score
+
+logger = getLogger(__name__)
 
 
 class DataBasePipeline(ABC):
@@ -72,19 +76,33 @@ class DetailItemPipeline(DataBasePipeline):
                 detail_object.web = None
 
             if not anime_id:
-                self.session.add(detail_object)
-                self.session.flush()
+                try:
+                    self.session.add(detail_object)
+                    self.session.flush()
+                except Exception as e:
+                    self.session.rollback()
+                    raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
                 anime_id = detail_object.id
 
             for i in (adapter.get('name'), adapter.get('translation'), *adapter.get('alias')):
+                if not i:
+                    continue
                 if self.session.query(NameID).filter(NameID.name == i).first():
                     continue
                 name_object = NameID()
                 name_object.id = anime_id
                 name_object.name = i
-                self.session.add(name_object)
+                try:
+                    self.session.add(name_object)
+                except Exception as e:
+                    self.session.rollback()
+                    raise DropItem(f'An error occurred when saving {name_object} to database: {e}')
 
-            self.session.commit()
+            try:
+                self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                raise DropItem(f'An error occurred when saving data to database: {e}')
 
         return item
 
@@ -101,14 +119,22 @@ class ScoreItemPipeline(DataBasePipeline):
             else:
                 detail_object = Detail()
                 detail_object.name = adapter.get('name')
-                self.session.add(detail_object)
-                self.session.flush()
+                try:
+                    self.session.add(detail_object)
+                    self.session.flush()
+                except Exception as e:
+                    self.session.rollback()
+                    raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
                 anime_id = detail_object.id
 
                 name_object = NameID()
                 name_object.id = anime_id
                 name_object.name = adapter.get('name')
-                self.session.add(name_object)
+                try:
+                    self.session.add(name_object)
+                except Exception as e:
+                    self.session.rollback()
+                    raise DropItem(f'An error occurred when saving {name_object} to database: {e}')
 
             score_object: Score | None = self.session.query(Score).filter(
                 Score.detailId == anime_id,
@@ -133,18 +159,27 @@ class ScoreItemPipeline(DataBasePipeline):
                     'vote': adapter.get('vote')
                 }
 
-            if web.id == 2:
-                score_object.detailScore['2']['score'] *= 2
+            if web:
+                if web.name == 'Anikore':
+                    score_object.detailScore['2']['score'] *= 2
 
-            score_sum = 0
+            score_sum = 0.0
             score_object.vote = 0
             for i in score_object.detailScore:
                 score_sum += score_object.detailScore[i]['score'] * score_object.detailScore[i]['vote']
                 score_object.vote += score_object.detailScore[i]['vote']
-            score_object.score = round(score_sum / score_object.vote, 1)
-
+            try:
+                score_object.score = round(score_sum / score_object.vote, 1)
+            except ZeroDivisionError:
+                score_object.score = 0.0
             self.session.add(score_object)
-            self.session.commit()
+
+            try:
+
+                self.session.commit()
+            except Exception as e:
+                self.session.rollback()
+                raise DropItem(f'An error occurred when saving data to database: {e}')
 
         return item
 
@@ -152,7 +187,9 @@ class ScoreItemPipeline(DataBasePipeline):
 class PictureItemPipeline(DataBasePipeline):
     def __init__(self):
         super().__init__()
-        self.save_path = '../picture'
+        current_dir = dirname(abspath(__file__))
+        parent_dir = normpath(join(current_dir, '..'))
+        self.save_path = join(parent_dir, 'cover')
 
     def process_item(self, item: Item, spider: Spider):
         """处理PictureItem，保存图片到本地"""
