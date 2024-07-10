@@ -14,7 +14,10 @@ URL_PATTERN = compile(r'https?://(.*?)/subject/(\d+)')
 
 class BangumiSpider(Spider):
     name = "Bangumi"
-    allowed_domains = ["bangumi.tv", "lain.bgm.tv", "localhost"]
+    allowed_domains = [
+        "bangumi.tv",
+        # "lain.bgm.tv"
+    ]
 
     def start_requests(self) -> Iterable[Request]:
         path = dirname(abspath(__file__))
@@ -31,6 +34,7 @@ class BangumiSpider(Spider):
             item.xpath('./div/div/p[1]/a/@href').get()
             for item in response.xpath('//*[@id="colunmSingle"]/div/ul/li/dl/dd/ul/li')
         ]
+        urls = [urls[0]]
         yield from response.follow_all(urls, callback=self.parse_detail, meta=response.meta)
 
     def parse_detail(self, response: Response):
@@ -77,7 +81,7 @@ class BangumiSpider(Spider):
             response.xpath(r'//*[@id="panelInterestWrapper"]/div[1]/div/a/div/div[2]/span[1]/text()').get()
         )
         score['vote'] = int(response.xpath(r'//*[@id="ChartWarpper"]/div/small/span/text()').get())
-        score['source'] = detail.web
+        score['source'] = detail['web']
 
         yield score
 

@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
-# 构造数据库URI
 from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, CHAR, DECIMAL
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.dialects.mysql import TINYINT, MEDIUMINT
@@ -31,7 +30,7 @@ class Detail(Base):
     __tablename__ = 'detail'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(64), nullable=False)
+    name = Column(String(128), nullable=False)
     translation = Column(String(64))
     alias = Column(JSON)
     season = Column(String(3), index=True)
@@ -48,7 +47,7 @@ class Detail(Base):
 class NameID(Base):
     __tablename__ = 'nameid'
 
-    name = Column(String(64), primary_key=True)
+    name = Column(String(128), primary_key=True)
     id = Column(Integer)
 
 
@@ -73,4 +72,16 @@ class Web(Base):
 
 
 if __name__ == '__main__':
-    pass
+    Base.metadata.drop_all(Engine)
+    Base.metadata.create_all(Engine)
+
+    session = Session()
+    session.add_all((
+        Web(name='Bangumi', host='bangumi.tv', url_format='/subject/{}'),
+        Web(name='Anikore', host='anikore.jp', url_format='/anime/{}'),
+        Web(name='aniDB', host='anidb.net', url_format='/anime/{}'),
+        Web(name='MyAnimeList', host='myanimelist.net', url_format='/anime/{}'),
+    ))
+
+    session.commit()
+    session.close()
