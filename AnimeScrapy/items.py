@@ -26,6 +26,7 @@ class ScoreItem(Item):
     score = Field()
     vote = Field()
     source = Field()
+    date = Field()
 
 
 class PictureItem(Item):

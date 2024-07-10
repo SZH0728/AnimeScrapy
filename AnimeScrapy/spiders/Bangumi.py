@@ -5,8 +5,6 @@ from os.path import abspath, join, dirname
 
 from scrapy import Spider, Request, Selector
 from scrapy.http import Response
-from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
 
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 
@@ -16,7 +14,7 @@ URL_PATTERN = compile(r'https?://(.*?)/subject/(\d+)')
 
 class BangumiSpider(Spider):
     name = "Bangumi"
-    allowed_domains = ["bangumi.tv", "lain.bgm.tv"]
+    allowed_domains = ["bangumi.tv", "lain.bgm.tv", "localhost"]
 
     def start_requests(self) -> Iterable[Request]:
         path = dirname(abspath(__file__))
@@ -57,18 +55,6 @@ class BangumiSpider(Spider):
                     detail['translation'] = i.xpath(r'./text()').get()
                 case '放送开始: ':
                     day = DATE_PATTERN.findall(i.xpath(r'./text()').get())[0]
-
-                    season = int(day[1])
-                    if 1 <= season <= 3:
-                        season = 'C'
-                    elif 4 <= season <= 6:
-                        season = 'X'
-                    elif 7 <= season <= 9:
-                        season = 'Q'
-                    elif 10 <= season <= 12:
-                        season = 'D'
-
-                    detail['season'] = f'{day[0][2:]}{season}'
                     detail['time'] = date(int(day[0]), int(day[1]), int(day[2]))
                 case '导演: ':
                     detail['director'] = i.xpath(r'./a/text()').get()
@@ -91,6 +77,7 @@ class BangumiSpider(Spider):
             response.xpath(r'//*[@id="panelInterestWrapper"]/div[1]/div/a/div/div[2]/span[1]/text()').get()
         )
         score['vote'] = int(response.xpath(r'//*[@id="ChartWarpper"]/div/small/span/text()').get())
+        score['source'] = detail.web
 
         yield score
 
