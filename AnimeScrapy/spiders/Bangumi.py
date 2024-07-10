@@ -34,7 +34,6 @@ class BangumiSpider(Spider):
             item.xpath('./div/div/p[1]/a/@href').get()
             for item in response.xpath('//*[@id="colunmSingle"]/div/ul/li/dl/dd/ul/li')
         ]
-        urls = [urls[0]]
         yield from response.follow_all(urls, callback=self.parse_detail, meta=response.meta)
 
     def parse_detail(self, response: Response):

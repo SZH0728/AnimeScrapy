@@ -6,7 +6,8 @@
 from datetime import date, datetime
 
 from pytz import timezone
-from scrapy import Spider
+from scrapy import Spider, Request
+from scrapy.exceptions import IgnoreRequest
 import scrapy.http.response
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
@@ -14,6 +15,7 @@ from itemadapter import is_item, ItemAdapter
 from AnimeScrapy.items import DetailItem, ScoreItem
 
 TZ = timezone('Asia/Shanghai')
+
 
 class DetailItemSpiderMiddleware(object):
     def process_spider_output(self, response: scrapy.http.response, result, spider: Spider):
@@ -51,3 +53,14 @@ class ScoreItemSpiderMiddleware(object):
                 yield adapter.item
             else:
                 yield i
+
+
+class FilterDetailRequestDownloaderMiddleware(object):
+    def process_request(self, request: Request, spider: Spider):
+        if 'bangumi.tv' in request.url:
+            return None
+
+        now = datetime.now(TZ).date()
+        if now.month in {1, 4, 7, 10} and now.day == 1:
+            raise IgnoreRequest('Ignore the detail request for the first day of the season')
+        return None

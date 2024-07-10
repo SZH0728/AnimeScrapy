@@ -2,7 +2,7 @@
 # AUTHOR: SUN
 from scrapy import cmdline
 
-cmdline.execute('scrapy crawl Bangumi'.split())
+cmdline.execute('scrapy crawl aniDB'.split())
 
 if __name__ == '__main__':
     pass
