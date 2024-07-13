@@ -79,9 +79,13 @@ class DetailItemPipeline(DataBasePipeline):
 
             web = adapter.get('web')
             web = self.session.query(Web).filter(Web.host == web).first()
-            if web:
-                if web.name == 'Bangumi':
+
+            if detail_object.web:
+                original_web = self.session.query(Web).filter(Web.id == detail_object.web).first()
+                if original_web and original_web.name == 'Bangumi' and web.name != 'Bangumi':
                     raise DropItem(f'{detail_object.name} has a better data source from Bangumi')
+
+            if web:
                 detail_object.web = web.id
             else:
                 detail_object.web = None
