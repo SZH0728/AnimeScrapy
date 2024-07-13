@@ -1,7 +1,6 @@
 from typing import Iterable
 from re import compile
 from datetime import date as date
-from os.path import abspath, join, dirname
 
 from scrapy import Spider, Request, Selector
 from scrapy.http import Response
@@ -9,6 +8,7 @@ from scrapy.http import Response
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 
 DATE_PATTERN = compile(r'(\d{4})年(\d{1,2})月(\d{1,2})日')
+DATE_PATTERN_BACKUP = compile(r'(\d{4})-(\d{1,2})-(\d{1,2})')
 URL_PATTERN = compile(r'https?://(.*?)/subject/(\d+)')
 
 
@@ -16,14 +16,11 @@ class BangumiSpider(Spider):
     name = "Bangumi"
     allowed_domains = [
         "bangumi.tv",
-        # "lain.bgm.tv"
+        # "lain.bgm.tv",
     ]
 
     def start_requests(self) -> Iterable[Request]:
-        path = dirname(abspath(__file__))
-        with open(join(path, 'anime.txt'), 'r') as f:
-            anime = set(f.read().split())
-        return [Request(url='https://bangumi.tv/calendar', callback=self.parse_calendar, meta={'anime': anime})]
+        return [Request(url='https://bangumi.tv/calendar', callback=self.parse_calendar)]
 
     def parse(self, response: Response):
         pass
@@ -38,6 +35,9 @@ class BangumiSpider(Spider):
 
     def parse_detail(self, response: Response):
         """从详情页解析动画信息."""
+        if response.xpath(r'//*[@id="colunmNotice"]/img'):
+            return None
+
         detail = DetailItem()
         detail['name'] = response.xpath(r'//*[@id="headerSubject"]/h1/a/text()')[0].get()
 
@@ -56,21 +56,32 @@ class BangumiSpider(Spider):
             match i.xpath(r'./span/text()').get():
                 case '中文名: ':
                     detail['translation'] = i.xpath(r'./text()').get()
-                case '放送开始: ':
-                    day = DATE_PATTERN.findall(i.xpath(r'./text()').get())[0]
-                    detail['time'] = date(int(day[0]), int(day[1]), int(day[2]))
+                case '放送开始: ' | '上映年度：':
+                    day = DATE_PATTERN.findall(i.xpath(r'./text()').get())
+                    if not day:
+                        day = DATE_PATTERN_BACKUP.findall(i.xpath(r'./text()').get())
+
+                    if day:
+                        day = day[0]
+                        detail['time'] = date(int(day[0]), int(day[1]), int(day[2]))
+                    else:
+                        self.logger.error(f'An error occurred while parsing date: {i.extract()}')
                 case '导演: ':
                     detail['director'] = i.xpath(r'./a/text()').get()
                 case '别名: ':
                     alias.append(i.xpath(r'./text()').get())
 
         detail['alias'] = alias
-        detail['web'], detail['webId'] = URL_PATTERN.findall(response.url)[0]
+        # detail['web'], detail['webId'] = URL_PATTERN.findall(response.url)[0]
+        web = 'https://bangumi.tv'+response.xpath(r'//*[@id="headerSubject"]/h1/a/@href')[0].get()
+        detail['web'], detail['webId'] = URL_PATTERN.findall(web)[0]
 
         picture_url = response.xpath('//*[@id="bangumiInfo"]/div/div[1]/a/img/@src').get()
-        detail['picture'] = f'https:{picture_url}' if not picture_url.startswith('http') else picture_url
-
-        response.meta[picture_url] = detail['name']
+        if picture_url:
+            detail['picture'] = f'https:{picture_url}' if not picture_url.startswith('http') else picture_url
+            response.meta[picture_url] = detail['name']
+        else:
+            detail['picture'] = None
 
         yield detail
 
@@ -84,10 +95,15 @@ class BangumiSpider(Spider):
 
         yield score
 
-        if detail['name'] not in response.meta['anime']:
+        if detail['name'] not in response.meta['anime'] and picture_url:
             yield response.follow(picture_url, callback=self.parse_picture, meta=response.meta)
 
     def parse_picture(self, response: Response):
         item = PictureItem()
         item['name'] = response.meta[response.url]
         item['picture'] = response.body
+
+
+if __name__ == '__main__':
+    from scrapy.cmdline import execute
+    execute('scrapy crawl Bangumi'.split())

@@ -4,6 +4,8 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from datetime import date, datetime
+from os.path import abspath, join, dirname, normpath
+from typing import Iterable
 
 from pytz import timezone
 from scrapy import Spider, Request
@@ -22,19 +24,24 @@ class DetailItemSpiderMiddleware(object):
         for i in result:
             if is_item(i) and isinstance(i, DetailItem):
                 adapter = ItemAdapter(i)
+
+                if not adapter.get('time'):
+                    yield adapter.item
+                    continue
+
                 time: date = adapter.get('time')
 
                 year = str(time.year)[2:]
                 month = time.month
 
                 if 1 <= month <= 3:
-                    month = 'C'
-                elif 4 <= month <= 6:
-                    month = 'X'
-                elif 7 <= month <= 9:
-                    month = 'Q'
-                elif 10 <= month <= 12:
                     month = 'D'
+                elif 4 <= month <= 6:
+                    month = 'C'
+                elif 7 <= month <= 9:
+                    month = 'X'
+                elif 10 <= month <= 12:
+                    month = 'Q'
 
                 adapter['season'] = f'{year}{month}'
 
@@ -50,14 +57,31 @@ class ScoreItemSpiderMiddleware(object):
                 adapter = ItemAdapter(i)
                 now = datetime.now(TZ)
                 adapter['date'] = now.date()
+                adapter['score'] = float(adapter['score'])
+                adapter['vote'] = int(adapter['vote'])
                 yield adapter.item
             else:
                 yield i
 
 
+class MetaDataSpiderMiddleware(object):
+    def process_start_requests(self, start_requests: Iterable[Request], spider: Spider):
+        current_dir = dirname(abspath(__file__))
+        parent_dir = normpath(join(current_dir, '..'))
+        path = join(parent_dir, 'anime.txt')
+        with open(path, 'r') as f:
+            anime = f.read().split()
+
+        for i in start_requests:
+            i.meta['anime'] = set(anime)
+            yield i
+
+
 class FilterDetailRequestDownloaderMiddleware(object):
     def process_request(self, request: Request, spider: Spider):
         if 'bangumi.tv' in request.url:
+            return None
+        if 'anime' not in request.url:
             return None
 
         now = datetime.now(TZ).date()

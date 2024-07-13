@@ -36,7 +36,7 @@ class Detail(Base):
     season = Column(String(3), index=True)
     time = Column(Date)
     tag = Column(JSON)
-    director = Column(String(16))
+    director = Column(String(32))
     cast = Column(JSON)
     description = Column(Text)
     web = Column(TINYINT)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     session = Session()
     session.add_all((
         Web(name='Bangumi', host='bangumi.tv', url_format='/subject/{}'),
-        Web(name='Anikore', host='anikore.jp', url_format='/anime/{}'),
+        Web(name='Anikore', host='www.anikore.jp', url_format='/anime/{}'),
         Web(name='aniDB', host='anidb.net', url_format='/anime/{}'),
         Web(name='MyAnimeList', host='myanimelist.net', url_format='/anime/{}'),
     ))
