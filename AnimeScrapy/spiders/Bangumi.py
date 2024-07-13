@@ -72,9 +72,9 @@ class BangumiSpider(Spider):
                     alias.append(i.xpath(r'./text()').get())
 
         detail['alias'] = alias
-        # detail['web'], detail['webId'] = URL_PATTERN.findall(response.url)[0]
-        web = 'https://bangumi.tv'+response.xpath(r'//*[@id="headerSubject"]/h1/a/@href')[0].get()
-        detail['web'], detail['webId'] = URL_PATTERN.findall(web)[0]
+        detail['web'], detail['webId'] = URL_PATTERN.findall(response.url)[0]
+        # web = 'https://bangumi.tv'+response.xpath(r'//*[@id="headerSubject"]/h1/a/@href')[0].get()
+        # detail['web'], detail['webId'] = URL_PATTERN.findall(web)[0]
 
         picture_url = response.xpath('//*[@id="bangumiInfo"]/div/div[1]/a/img/@src').get()
         if picture_url:
