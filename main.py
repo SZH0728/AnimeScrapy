@@ -1,8 +1,12 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
-from scrapy import cmdline
+from time import sleep
 
-cmdline.execute('scrapy crawl aniDB'.split())
+from schedule import run_pending
+
+import scheduler
 
 if __name__ == '__main__':
-    pass
+    while True:
+        run_pending()
+        sleep(1)

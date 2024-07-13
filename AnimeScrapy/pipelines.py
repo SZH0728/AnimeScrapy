@@ -8,11 +8,13 @@
 from abc import ABC, abstractmethod
 from os.path import join, dirname, abspath, normpath
 from logging import getLogger
+from copy import deepcopy
 
 from itemadapter import ItemAdapter
 from scrapy import Spider, Item
 from scrapy.exceptions import DropItem
 from sqlalchemy.orm import scoped_session
+from sqlalchemy.exc import SQLAlchemyError
 
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 from dbmanager import Session, NameID, Detail, Web, Score
@@ -33,14 +35,21 @@ class DataBasePipeline(ABC):
         self.session.commit()
         self.session.close()
 
-    @abstractmethod
     def process_item(self, item: Item, spider: Spider):
+        """处理item的抽象方法"""
+        with self.session.no_autoflush:
+            item = self.process(item, spider)
+            self.session.commit()
+            return item
+
+    @abstractmethod
+    def process(self, item: Item, spider: Spider):
         """处理item的抽象方法"""
         return item
 
 
 class DetailItemPipeline(DataBasePipeline):
-    def process_item(self, item: Item, spider: Spider):
+    def process(self, item: Item, spider: Spider):
         """处理DetailItem，保存到数据库"""
         if isinstance(item, DetailItem):
             adapter = ItemAdapter(item)
@@ -71,6 +80,8 @@ class DetailItemPipeline(DataBasePipeline):
             web = adapter.get('web')
             web = self.session.query(Web).filter(Web.host == web).first()
             if web:
+                if web.name == 'Bangumi':
+                    raise DropItem(f'{detail_object.name} has a better data source from Bangumi')
                 detail_object.web = web.id
             else:
                 detail_object.web = None
@@ -79,7 +90,7 @@ class DetailItemPipeline(DataBasePipeline):
                 try:
                     self.session.add(detail_object)
                     self.session.flush()
-                except Exception as e:
+                except SQLAlchemyError as e:
                     self.session.rollback()
                     raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
                 anime_id = detail_object.id
@@ -87,20 +98,19 @@ class DetailItemPipeline(DataBasePipeline):
             for i in (adapter.get('name'), adapter.get('translation'), *adapter.get('alias')):
                 if not i:
                     continue
-                if self.session.query(NameID).filter(NameID.name == i).first():
-                    continue
                 name_object = NameID()
                 name_object.id = anime_id
                 name_object.name = i
                 try:
-                    self.session.add(name_object)
-                except Exception as e:
+                    self.session.merge(name_object)
+                    self.session.flush()
+                except SQLAlchemyError as e:
                     self.session.rollback()
-                    raise DropItem(f'An error occurred when saving {name_object} to database: {e}')
+                    logger.error(f'An error occurred when saving {name_object} to database: {e}')
 
             try:
                 self.session.commit()
-            except Exception as e:
+            except SQLAlchemyError as e:
                 self.session.rollback()
                 raise DropItem(f'An error occurred when saving data to database: {e}')
 
@@ -108,7 +118,7 @@ class DetailItemPipeline(DataBasePipeline):
 
 
 class ScoreItemPipeline(DataBasePipeline):
-    def process_item(self, item: Item, spider: Spider):
+    def process(self, item: Item, spider: Spider):
         """处理ScoreItem，保存到数据库"""
         if isinstance(item, ScoreItem):
             adapter = ItemAdapter(item)
@@ -122,7 +132,7 @@ class ScoreItemPipeline(DataBasePipeline):
                 try:
                     self.session.add(detail_object)
                     self.session.flush()
-                except Exception as e:
+                except SQLAlchemyError as e:
                     self.session.rollback()
                     raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
                 anime_id = detail_object.id
@@ -132,7 +142,7 @@ class ScoreItemPipeline(DataBasePipeline):
                 name_object.name = adapter.get('name')
                 try:
                     self.session.add(name_object)
-                except Exception as e:
+                except SQLAlchemyError as e:
                     self.session.rollback()
                     raise DropItem(f'An error occurred when saving {name_object} to database: {e}')
 
@@ -145,39 +155,42 @@ class ScoreItemPipeline(DataBasePipeline):
                 score_object = Score()
                 score_object.detailId = anime_id
                 score_object.date = adapter.get('date')
-                score_object.detailScore = {}
+                detailScore = {}
+            else:
+                detailScore = deepcopy(score_object.detailScore)
 
             web = self.session.query(Web).filter(Web.host == adapter.get('source')).first()
             if web:
-                score_object.detailScore[str(web.id)] = {
+                detailScore[str(web.id)] = {
                     'score': adapter.get('score'),
                     'vote': adapter.get('vote')
                 }
             else:
-                score_object.detailScore[adapter.get('web')] = {
+                detailScore[adapter.get('web')] = {
                     'score': adapter.get('score'),
                     'vote': adapter.get('vote')
                 }
 
             if web:
                 if web.name == 'Anikore':
-                    score_object.detailScore['2']['score'] *= 2
+                    detailScore['2']['score'] *= 2
 
             score_sum = 0.0
             score_object.vote = 0
-            for i in score_object.detailScore:
-                score_sum += score_object.detailScore[i]['score'] * score_object.detailScore[i]['vote']
-                score_object.vote += score_object.detailScore[i]['vote']
+            for i in detailScore:
+                score_sum += detailScore[i]['score'] * detailScore[i]['vote']
+                score_object.vote += detailScore[i]['vote']
             try:
                 score_object.score = round(score_sum / score_object.vote, 1)
             except ZeroDivisionError:
                 score_object.score = 0.0
-            self.session.add(score_object)
+
+            score_object.detailScore = detailScore
 
             try:
-
+                self.session.add(score_object)
                 self.session.commit()
-            except Exception as e:
+            except SQLAlchemyError as e:
                 self.session.rollback()
                 raise DropItem(f'An error occurred when saving data to database: {e}')
 
@@ -191,10 +204,12 @@ class PictureItemPipeline(DataBasePipeline):
         parent_dir = normpath(join(current_dir, '..'))
         self.save_path = join(parent_dir, 'cover')
 
-    def process_item(self, item: Item, spider: Spider):
+    def process(self, item: Item, spider: Spider):
         """处理PictureItem，保存图片到本地"""
         if isinstance(item, PictureItem):
             adapter = ItemAdapter(item)
+            if not adapter.get('name'):
+                raise DropItem('No name in PictureItem')
             anime_id = self.session.query(NameID).filter(NameID.name == adapter.get('name')).first().id
             with open(join(self.save_path, f'{anime_id}.jpg'), 'wb') as f:
                 f.write(adapter.get('picture'))

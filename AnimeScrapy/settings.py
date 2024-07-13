@@ -46,6 +46,7 @@ DEFAULT_REQUEST_HEADERS = {
 SPIDER_MIDDLEWARES = {
     "AnimeScrapy.middlewares.DetailItemSpiderMiddleware": 543,
     "AnimeScrapy.middlewares.ScoreItemSpiderMiddleware": 543,
+    "AnimeScrapy.middlewares.MetaDataSpiderMiddleware": 543,
 }
 
 # Enable or disable downloader middlewares
@@ -95,5 +96,5 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
 # LOG_FILE = 'default.txt'
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 DOWNLOAD_TIMEOUT = 60
