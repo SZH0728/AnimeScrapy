@@ -1,22 +1,28 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
-from schedule import every, repeat, run_all
+from schedule import every, repeat
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
 from dbmanager import Session, Detail
+from AnimeScrapy.spiders import *
 
 
-SPIDER = ('aniDB', 'Anikore', 'Bangumi', 'MyAnimeList')
+SPIDER = (
+    aniDB.AnidbSpider,
+    Anikore.AnikoreSpider,
+    Bangumi.BangumiSpider,
+    MyAnimeList.MyanimelistSpider
+)
 
 
-# @repeat(every().day.at("22:00", "Asia/Shanghai"))
-# def spider():
-#     settings = get_project_settings()
-#     process = CrawlerProcess(settings)
-#     for i in SPIDER:
-#         process.crawl(i)
-#     process.start()
+@repeat(every().day.at("20:00", "Asia/Shanghai"))
+def spider():
+    settings = get_project_settings()
+    process = CrawlerProcess(settings)
+    for i in SPIDER:
+        process.crawl(i)
+    process.start()
 
 
 @repeat(every().day.at("04:00", "Asia/Shanghai"))
@@ -28,9 +34,11 @@ def anime():
         *[i.translation for i in result],
         *[alia for i in result for alia in i.alias]
     ]
-    with open('anime.txt', 'w') as f:
+    name = [i for i in name if i]
+    with open('anime.txt', 'w', encoding='utf-8') as f:
         f.write('\n'.join(name))
 
 
 if __name__ == '__main__':
-    run_all()
+    from schedule import run_all
+    run_all(10000)
