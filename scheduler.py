@@ -1,5 +1,7 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
+from multiprocessing import Process
+
 from schedule import every, repeat
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -16,13 +18,18 @@ SPIDER = (
 )
 
 
+def start_spider():
+    settings = get_project_settings()
+    crawler = CrawlerProcess(settings)
+    for i in SPIDER:
+        crawler.crawl(i)
+    crawler.start()
+
+
 @repeat(every().day.at("20:00", "Asia/Shanghai"))
 def spider():
-    settings = get_project_settings()
-    process = CrawlerProcess(settings)
-    for i in SPIDER:
-        process.crawl(i)
-    process.start()
+    spider_process = Process(target=start_spider)
+    spider_process.start()
 
 
 @repeat(every().day.at("04:00", "Asia/Shanghai"))
@@ -41,4 +48,4 @@ def anime():
 
 if __name__ == '__main__':
     from schedule import run_all
-    run_all(10000)
+    run_all()
