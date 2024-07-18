@@ -1,14 +1,21 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
+from configparser import ConfigParser
+from os.path import abspath, dirname, join
+
 from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, CHAR, DECIMAL
 from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.dialects.mysql import TINYINT, MEDIUMINT
 
-HOST = 'localhost'
-PORT = 3306
-USERNAME = 'root'
-PASSWORD = 'root'
-DB = 'anime'
+config = ConfigParser()
+current_dir = dirname(abspath(__file__))
+config.read(join(current_dir, 'scrapy.cfg'))
+
+HOST = config.get('database', 'host')
+PORT = config.getint('database', 'port')
+USERNAME = config.get('database', 'username')
+PASSWORD = config.get('database', 'password')
+DB = config.get('database', 'db')
 
 # 构造数据库URI
 DB_URI = f'mariadb+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB}'
@@ -24,6 +31,17 @@ SessionFactory = sessionmaker(bind=Engine)
 
 # 创建scoped_session以确保每个线程都有独立的session实例
 Session = scoped_session(SessionFactory)
+
+
+class Cache(Base):
+    __tablename__ = 'cache'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(128), nullable=False, index=True)
+    score = Column(DECIMAL(3, 1))
+    vote = Column(Integer)
+    date = Column(Date, nullable=False)
+    web = Column(TINYINT)
 
 
 class Detail(Base):
