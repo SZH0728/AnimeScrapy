@@ -147,6 +147,7 @@ class DataBasePipeline(ABC):
         """
         web = self.session.query(Web).filter_by(host=link).first()
         if web:
+            # noinspection PyTypeChecker
             return web
         else:
             raise DropItem(f'{link} is not a valid web link')
@@ -154,63 +155,122 @@ class DataBasePipeline(ABC):
 
 class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
     def __init__(self):
+        """初始化DetailItemPipeline，设置目标模型为DetailItem。"""
         super().__init__(DetailItem)
 
     def process(self, item: Item, spider: Spider):
-        """处理DetailItem，保存到数据库"""
+        """
+        处理DetailItem，根据名称列表收集信息，创建或更新Detail对象，处理缓存数据。
+
+        :param item: 需要处理的DetailItem实例。
+        :param spider: 正在运行的Spider实例。
+        :return: 处理后的DetailItem实例。
+        """
+        # 使用ItemAdapter包装item，便于数据访问
         adapter = ItemAdapter(item)
+
+        # 收集名称列表，去除空值
         name_list = self.collect_name(adapter)
         name_list = [i for i in name_list if i]
+
+        # 根据名称列表查询数据库中的ID
+        # noinspection PyTypeChecker
         name_id = self.select_name_id_in_list(name_list)
 
+        # 如果没有找到对应的ID
         if len(name_id) == 0:
+            # 创建新的Detail对象并获取其ID
             detail_object = self.create_detail_object(adapter)
             anime_id = detail_object.id
 
+            # 将名称与新创建的Detail ID关联
             self.add_names_to_name_id(name_list, anime_id)
 
+        # 如果只找到一个ID
         elif len(name_id) == 1:
+            # 获取唯一ID并查询对应的Detail对象
             anime_id = name_id.pop()
-            self.add_names_to_name_id(name_list, anime_id)
             detail_object = self.select_detail_object_by_id(anime_id)
 
+            # 检查当前网站是否为特定网站（如Bangumi），如果是则更新Detail对象
             cur_web = self.select_web_by_link(adapter.get('web'))
             if cur_web.name == 'Bangumi':
                 self.update_detail_object(detail_object, adapter)
 
-        else:
-            raise DropItem(f'{name_list} have more than one id: {name_id}')
+            # 将名称与已存在的Detail ID关联
+            self.add_names_to_name_id(name_list, anime_id)
 
+        # 如果发现多个ID对应同一组名称，抛出异常
+        else:
+            raise DropItem(f'The names {name_list} map to more than one ID: {name_id}')
+
+        # 查询所有与名称相关的缓存数据
         cache_list = self.select_all_cache_by_name(name_list)
+
+        # 遍历缓存列表，根据缓存数据创建Score对象并更新数据库
         for i in cache_list:
             self.transform_cache_object(i, anime_id)
 
+        # 清除已处理的缓存数据
         self.clear_cache(cache_list)
         return item
 
     @staticmethod
-    def collect_name(adapter: ItemAdapter) -> tuple:
+    def collect_name(adapter: ItemAdapter) -> tuple[str, ...]:
+        """
+        收集DetailItem中的名称信息。
+
+        :param adapter: 包含名称信息的ItemAdapter实例。
+        :return: 名称元组。
+        """
         if adapter.get('alias'):
             return adapter.get('name'), adapter.get('translation'), *adapter.get('alias')
         else:
             return adapter.get('name'), adapter.get('translation')
 
     def select_name_id_in_list(self, name_list: tuple[str]) -> set[int]:
-        anime_id_object = self.session.query(NameID).filter(NameID.name.in_(name_list)).all()
-        return set([i.id for i in anime_id_object])
+        """
+        根据名称列表查询对应的anime_id集合。
 
-    def select_detail_object_by_id(self, id_) -> Detail:
+        :param name_list: 需要查询的名称列表。
+        :return: 查询到的anime_id集合。
+        """
+        # noinspection PyUnresolvedReferences
+        anime_id_object = self.session.query(NameID).filter(NameID.name.in_(name_list)).all()
+        return {i.id for i in anime_id_object}
+
+    def select_detail_object_by_id(self, id_: int) -> Detail:
+        """
+        根据id查询Detail对象。
+
+        :param id_: 需要查询的id。
+        :return: 查询到的Detail对象。
+        """
         detail_object = self.session.query(Detail).filter_by(id=id_).first()
         if detail_object:
+            # noinspection PyTypeChecker
             return detail_object
         else:
             raise ValueError(f'{id_} is not a valid anime id')
 
     def select_all_cache_by_name(self, name_list: Iterable[str | NameID]) -> list[Cache]:
+        """
+        根据名称列表查询所有相关联的Cache对象。
+
+        :param name_list: 需要查询的名称列表。
+        :return: 查询到的Cache对象列表。
+        """
         name_list = [i if isinstance(i, str) else i.name for i in name_list]
+        # noinspection PyUnresolvedReferences,PyTypeChecker
         return self.session.query(Cache).filter(Cache.name.in_(name_list)).all()
 
     def create_detail_object(self, adapter: ItemAdapter) -> Detail:
+        """
+        创建Detail对象并保存到数据库。
+
+        :param adapter: 包含Detail信息的ItemAdapter实例。
+        :return: 创建的Detail对象。
+        """
         detail_object = Detail()
         self.update_detail_object(detail_object, adapter)
 
@@ -224,6 +284,13 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         return detail_object
 
     def create_score_object_by_cache(self, cache: Cache, id_: int) -> Score:
+        """
+        根据缓存对象和Detail对象的id创建Score对象，并将其保存至数据库。
+
+        :param cache: Cache对象，包含评分信息。
+        :param id_: Detail对象的id，用于关联Score对象。
+        :return: 创建的Score对象。
+        """
         score_object = Score()
 
         score_object.detailId = id_
@@ -246,6 +313,13 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         return score_object
 
     def add_names_to_name_id(self, name_list: Iterable[str | NameID], id_: int) -> list[NameID]:
+        """
+        将名称列表与指定id关联并保存到数据库。
+
+        :param name_list: 需要关联的名称列表。
+        :param id_: 关联的目标id。
+        :return: 成功关联的NameID对象列表。
+        """
         name_id_list_object = [NameID(name=i, id=id_) if isinstance(i, str) else i for i in name_list]
         succeed_name_id_list = []
 
@@ -256,7 +330,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
             logger.error(f'An error occurred when saving {name_id_list_object} to database: {e}')
             for i in name_id_list_object:
                 try:
-                    self.session.add(i)
+                    self.session.merge(i)
                     self.session.commit()
                 except SQLAlchemyError as e:
                     self.session.rollback()
@@ -269,6 +343,12 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
             return succeed_name_id_list
 
     def update_detail_object(self, detail_object: Detail, adapter: ItemAdapter):
+        """
+        更新Detail对象的信息。
+
+        :param detail_object: 需要更新的Detail对象。
+        :param adapter: 包含更新信息的ItemAdapter实例。
+        """
         web = self.select_web_by_link(adapter.get('web'))
 
         detail_object.name = adapter.get('name')
@@ -286,12 +366,25 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
 
     @staticmethod
     def update_alias(detail_object: Detail, alias: Iterable[str | NameID]):
+        """
+        更新Detail对象的别名列表。
+
+        :param detail_object: 需要更新的Detail对象。
+        :param alias: 新的别名列表。
+        """
         alias = [i if isinstance(i, str) else i.name for i in alias]
         pre_alias = deepcopy(detail_object.alias)
         pre_alias += alias
         detail_object.alias = list(set(pre_alias))
 
     def transform_cache_object(self, cache_object: Cache, id_: int) -> Score:
+        """
+        将Cache对象转换为Score对象，或更新已存在的Score对象。
+
+        :param cache_object: 需要转换的Cache对象。
+        :param id_: 目标Detail对象的id。
+        :return: 转换或更新后的Score对象。
+        """
         score_object = self.session.query(Score).filter(and_(
             Score.date == cache_object.date,
             Score.detailId == id_
@@ -299,6 +392,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
 
         if score_object:
             web = self.session.query(Web).filter_by(id=cache_object.web).first()
+            # noinspection PyTypeChecker
             self.update_detail_score(score_object, cache_object.score, cache_object.vote, web)
         else:
             score_object = self.create_score_object_by_cache(cache_object, id_)
@@ -306,6 +400,11 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         return score_object
 
     def clear_cache(self, cache_list: Iterable[Cache]):
+        """
+        清除给定的Cache对象列表。
+
+        :param cache_list: 需要清除的Cache对象列表。
+        """
         for i in cache_list:
             try:
                 self.session.delete(i)
@@ -429,9 +528,10 @@ class PictureItemPipeline(DataBasePipeline):
         if not adapter.get('name'):
             raise DropItem('No name in PictureItem')
 
-        anime_id = self.session.query(NameID).filter(NameID.name == adapter.get('name')).first()
+        # noinspection PyTypeChecker
+        anime_id: NameID = self.session.query(NameID).filter(NameID.name == adapter.get('name')).first()
         if anime_id:
-            with open(join(self.save_path, f'{anime_id}.jpg'), 'wb') as f:
+            with open(join(self.save_path, f'{anime_id.id}.jpg'), 'wb') as f:
                 f.write(adapter.get('picture'))
         else:
             logger.error(f'Could not find id for name: {adapter.get("name")}')

@@ -20,7 +20,8 @@ TZ = timezone('Asia/Shanghai')
 
 
 class DetailItemSpiderMiddleware(object):
-    def process_spider_output(self, response: scrapy.http.response, result, spider: Spider):
+    @staticmethod
+    def process_spider_output(response: scrapy.http.response, result, spider: Spider):
         for i in result:
             if is_item(i) and isinstance(i, DetailItem):
                 adapter = ItemAdapter(i)
@@ -51,7 +52,8 @@ class DetailItemSpiderMiddleware(object):
 
 
 class ScoreItemSpiderMiddleware(object):
-    def process_spider_output(self, response: scrapy.http.response, result, spider: Spider):
+    @staticmethod
+    def process_spider_output(response: scrapy.http.response, result, spider: Spider):
         for i in result:
             if is_item(i) and isinstance(i, ScoreItem):
                 adapter = ItemAdapter(i)
@@ -65,7 +67,8 @@ class ScoreItemSpiderMiddleware(object):
 
 
 class MetaDataSpiderMiddleware(object):
-    def process_start_requests(self, start_requests: Iterable[Request], spider: Spider):
+    @staticmethod
+    def process_start_requests(start_requests: Iterable[Request], spider: Spider):
         current_dir = dirname(abspath(__file__))
         parent_dir = normpath(join(current_dir, '..'))
         path = join(parent_dir, 'anime.txt')
@@ -78,7 +81,8 @@ class MetaDataSpiderMiddleware(object):
 
 
 class FilterDetailRequestDownloaderMiddleware(object):
-    def process_request(self, request: Request, spider: Spider):
+    @staticmethod
+    def process_request(request: Request, spider: Spider):
         if 'bangumi.tv' in request.url:
             return None
         if 'anime' not in request.url:

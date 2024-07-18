@@ -10,6 +10,7 @@ from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
 URL_PATTERN = compile(r'https?://(.*?)/.*?')
 ANIME_PATTERN = compile(r'https?://(.*?)/anime/(\d+)')
 
+
 class MyanimelistSpider(Spider):
     name = "MyAnimeList"
     allowed_domains = ["myanimelist.net"]
@@ -21,7 +22,9 @@ class MyanimelistSpider(Spider):
         pass
 
     def parse_list(self, response: Response):
-        for i in response.xpath(r'//*[@id="content"]/div[3]/div[contains(@class, "seasonal-anime-list")]/div[contains(@class, "seasonal-anime")]'):
+        for i in response.xpath(
+                r'//*[@id="content"]/div[3]/div[contains(@class, "seasonal-anime-list")]'
+                r'/div[contains(@class, "seasonal-anime")]'):
             score_object = ScoreItem()
 
             score_object['name'] = i.xpath(r'./div[1]/div[1]/span[4]/text()').get()

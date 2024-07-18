@@ -98,7 +98,8 @@ class BangumiSpider(Spider):
         if detail['name'] not in response.meta['anime'] and picture_url:
             yield response.follow(picture_url, callback=self.parse_picture, meta=response.meta)
 
-    def parse_picture(self, response: Response):
+    @staticmethod
+    def parse_picture(response: Response):
         item = PictureItem()
         item['name'] = response.meta[response.url]
         item['picture'] = response.body

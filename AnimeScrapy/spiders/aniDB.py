@@ -27,8 +27,14 @@ class AnidbSpider(Spider):
                 score_object = ScoreItem()
 
                 score_object['name'] = i.xpath(r'./div[2]/div[contains(@class, "wrap name")]/a/text()').get()
-                score_object['score'] = float(i.xpath(r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[1]/text()').get())
-                score_object['vote'] = int(i.xpath(r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[2]/text()').get().strip('()'))
+                score_object['score'] = float(i.xpath(
+                    r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[1]/text()'
+                ).get())
+
+                score_object['vote'] = int(i.xpath(
+                    r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[2]/text()'
+                ).get().strip('()'))
+
                 score_object['source'] = URL_PATTERN.findall(response.url)[0]
 
                 yield score_object
@@ -84,7 +90,8 @@ class AnidbSpider(Spider):
         response.meta[picture_url] = detail_object['name']
         yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
 
-    def parse_picture(self, response: Response):
+    @staticmethod
+    def parse_picture(response: Response):
         picture_object = PictureItem()
         picture_object['name'] = response.meta[response.url]
         picture_object['picture'] = response.body

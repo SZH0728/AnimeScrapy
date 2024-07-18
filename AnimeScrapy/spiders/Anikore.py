@@ -38,7 +38,8 @@ class AnikoreSpider(Spider):
         pass
 
     def parse_list(self, response: Response):
-        for i in response.xpath(r'//*[@id="page-top"]/section[4]/div/div[2]/div[contains(@class, "l-searchPageRanking_unit")]'):
+        for i in response.xpath(
+                r'//*[@id="page-top"]/section[4]/div/div[2]/div[contains(@class, "l-searchPageRanking_unit")]'):
             score_object = ScoreItem()
 
             name = GET_NAME.findall(i.xpath(r'./h2/a/span[3]/span/following-sibling::text()[1]').get().strip())

@@ -35,7 +35,7 @@ def spider():
 @repeat(every().day.at("04:00", "Asia/Shanghai"))
 def anime():
     session = Session()
-    result = session.query(Detail).filter(Detail.webId != None)
+    result = session.query(Detail).filter(Detail.webId is not None)
     name = [
         *[i.name for i in result],
         *[i.translation for i in result],
