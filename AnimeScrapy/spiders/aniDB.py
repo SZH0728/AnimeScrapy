@@ -1,5 +1,5 @@
 from typing import Iterable
-from datetime import date
+from datetime import datetime
 from re import compile
 
 from scrapy import Request, Spider, Selector
@@ -24,20 +24,20 @@ class AnidbSpider(Spider):
     def parse_list(self, response: Response):
         for i in response.xpath(r'//*[@id="layout-main"]/div[1]/div[2]/div[2]/div/div/div'):
             if i.xpath(r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[1]'):
-                score_object = ScoreItem()
+                score = ScoreItem()
 
-                score_object['name'] = i.xpath(r'./div[2]/div[contains(@class, "wrap name")]/a/text()').get()
-                score_object['score'] = float(i.xpath(
+                score['name'] = i.xpath(r'./div[2]/div[contains(@class, "wrap name")]/a/text()').get()
+                score['score'] = float(i.xpath(
                     r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[1]/text()'
                 ).get())
 
-                score_object['vote'] = int(i.xpath(
+                score['vote'] = int(i.xpath(
                     r'./div[2]/div[contains(@class, "votes average")]/span[2]/span[2]/text()'
                 ).get().strip('()'))
 
-                score_object['source'] = URL_PATTERN.findall(response.url)[0]
+                score['source'] = URL_PATTERN.findall(response.url)[0]
 
-                yield score_object
+                yield score
 
         urls = []
         for i in response.xpath(r'//a[contains(@class, "name-colored")]'):
@@ -48,10 +48,10 @@ class AnidbSpider(Spider):
         yield from response.follow_all(urls, callback=self.parse_detail, meta=response.meta)
 
     def parse_detail(self, response: Response):
-        detail_object = DetailItem()
+        detail = DetailItem()
 
-        detail_object['name'] = response.xpath(r'//*[@id="layout-main"]/h1/text()').get().replace('Anime: ', '')
-        detail_object['translation'] = response.xpath(
+        detail['name'] = response.xpath(r'//*[@id="layout-main"]/h1/text()').get().replace('Anime: ', '')
+        detail['translation'] = response.xpath(
             r'//*[@id="tab_1_pane"]/div/table/tbody/tr[2]/td/label/text()').get()
 
         name_box = [
@@ -60,39 +60,49 @@ class AnidbSpider(Spider):
             *response.xpath(r'//*[@id="tab_2_pane"]/div/table/tbody/tr/td/text()')
         ]
         name_box = [i.get().strip() for i in name_box if i]
-        name_box = [i for i in name_box if i not in {'', '(', ')', detail_object['name'], detail_object['translation']}]
+        name_box = [i for i in name_box if i not in {'', '(', ')', detail['name'], detail['translation']}]
 
-        detail_object['alias'] = name_box
+        detail['alias'] = name_box
 
         time = response.xpath(
             r'//*[@id="tab_1_pane"]/div/table/tbody/tr[contains(@class, "year")]/td/span[1]/@content'
-        ).get().split('-')
-        detail_object['time'] = date(int(time[0]), int(time[1]), int(time[2]))
+        ).get()
+        detail['time'] = datetime.strptime(time, '%Y-%m-%d').date()
 
-        detail_object['tag'] = [i.xpath(r'./a/span[1]/text()').get()
+        detail['tag'] = [i.xpath(r'./a/span[1]/text()').get()
                                 for i in response.xpath(
                 r'//*[@id="tab_1_pane"]/div/table/tbody/tr[contains(@class, "tags")]/td/span')]
 
-        detail_object['director'] = response.xpath(r'//*[@id="staffoverview"]/tbody/tr[2]/td[2]/a/span[2]/text()').get()
-        detail_object['cast'] = [i.xpath(r'./td[1]/a/text()').get()
+        detail['director'] = response.xpath(r'//*[@id="staffoverview"]/tbody/tr[2]/td[2]/a/span[2]/text()').get()
+        detail['cast'] = [i.xpath(r'./td[1]/a/text()').get()
                                  for i in response.xpath(r'//*[@id="castoverview"]/tbody/tr')]
 
-        detail_object['description'] = response.xpath(
+        detail['description'] = response.xpath(
             r'string(//*[@id="layout-main"]/div[2]/div[@itemprop="description"])'
         ).get().strip()
-        detail_object['web'], detail_object['webId'] = ANIME_PATTERN.findall(response.url)[0]
+        detail['web'], detail['webId'] = ANIME_PATTERN.findall(response.url)[0]
 
         picture_url = response.xpath(r'//*[@id="layout-main"]/div[2]/div[1]/div[2]/div[1]/div/picture/img/@src').get()
-        detail_object['picture'] = picture_url
+        detail['picture'] = picture_url
 
-        yield detail_object
+        yield detail
 
-        response.meta[picture_url] = detail_object['name']
+        if detail['alias']:
+            name_list = (detail['name'], detail['translation'], *detail['alias'])
+        else:
+            name_list = (detail['name'], detail['translation'])
+
+        response.meta['picture'][picture_url] = name_list
         yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
 
     @staticmethod
     def parse_picture(response: Response):
-        picture_object = PictureItem()
-        picture_object['name'] = response.meta[response.url]
-        picture_object['picture'] = response.body
-        yield picture_object
+        picture = PictureItem()
+        picture['name'] = response.meta['picture'][response.url]
+        picture['picture'] = response.body
+        yield picture
+
+
+if __name__ == '__main__':
+    from scrapy.cmdline import execute
+    execute('scrapy crawl aniDB'.split())
