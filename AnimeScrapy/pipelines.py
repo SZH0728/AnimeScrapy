@@ -200,6 +200,9 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
             # 将名称与已存在的Detail ID关联
             self.add_names_to_name_id(name_list, anime_id)
 
+            # 更新别名
+            self.update_alias(detail_object, name_list)
+
         # 如果发现多个ID对应同一组名称，抛出异常
         else:
             raise DropItem(f'The names {name_list} map to more than one ID: {name_id}')
