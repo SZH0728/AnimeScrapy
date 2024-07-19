@@ -11,11 +11,12 @@ from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
 TZ = timezone('Asia/Shanghai')
 GET_NAME = compile(r'(.*?)（.*?）')
 URL_PATTERN = compile(r'https?://(.*?)/.*?')
+ANIME_PATTERN = compile(r'https?://(.*?)/anime/(\d+)/')
 
 
 class AnikoreSpider(Spider):
     name = "Anikore"
-    allowed_domains = ["www.anikore.jp"]
+    allowed_domains = ["www.anikore.jp", "img.anikore.jp"]
     start_urls = ["https://www.anikore.jp/chronicle/<year>/<season>"]
 
     def start_requests(self) -> Iterable[Request]:
@@ -54,3 +55,41 @@ class AnikoreSpider(Spider):
         if next_url:
             yield response.follow(next_url, callback=self.parse_list, meta=response.meta)
 
+        urls = []
+        for i in response.xpath(
+                r'//*[@id="page-top"]/section[4]/div/div[2]/div[contains(@class, "l-searchPageRanking_unit")]'):
+
+            name = GET_NAME.findall(i.xpath(r'./h2/a/span[3]/span/following-sibling::text()[1]').get().strip())[0]
+            if name not in response.meta['anime']:
+                urls.append(i.xpath(r'./h2/a/@href').get())
+        yield from response.follow_all(urls, callback=self.parse_detail, meta=response.meta)
+
+    def parse_detail(self, response: Response):
+        detail = DetailItem()
+        detail['name'] = response.xpath(r'//*[@id="page-top"]/section[4]/div/h1/text()').get().strip()
+        detail['description'] = response.xpath(r'string(//*[@id="page-top"]/section[6]/blockquote)').get()
+
+        time = response.xpath(r'//*[@id="page-top"]/section[7]/dl/div[2]/dd/a/text()').get()
+        detail['time'] = datetime.strptime(time, '%Y年%m月%d日').date()
+        detail['web'], detail['webId'] = ANIME_PATTERN.findall(response.url)[0]
+
+        picture_url: str = response.xpath(r'//*[@id="page-top"]/section[4]/div/div[1]/div/img/@data-src').get()
+        picture_url = picture_url.split('?')[0]
+        detail['picture'] = picture_url
+
+        yield detail
+
+        response.meta['picture'][picture_url] = (detail['name'], )
+        yield response.follow(picture_url, callback=self.parse_picture, meta=response.meta)
+
+    @staticmethod
+    def parse_picture(self, response: Response):
+        picture = PictureItem()
+        picture['name'] = response.meta['picture'][response.url]
+        picture['picture'] = response.body
+        yield picture
+
+
+if __name__ == '__main__':
+    from scrapy.cmdline import execute
+    execute('scrapy crawl Anikore'.split())
