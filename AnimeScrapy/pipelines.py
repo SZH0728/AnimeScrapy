@@ -276,7 +276,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
 
         try:
             self.session.add(detail_object)
-            self.session.flush()
+            self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
@@ -306,7 +306,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         self.update_score_and_vote(score_object)
         try:
             self.session.add(score_object)
-            self.session.flush()
+            self.session.commit()
         except SQLAlchemyError as e:
             self.session.rollback()
             logger.error(f'An error occurred when saving {score_object} to database: {e}')
@@ -320,6 +320,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         :param id_: 关联的目标id。
         :return: 成功关联的NameID对象列表。
         """
+        name_list = set(name_list)
         name_id_list_object = [NameID(name=i, id=id_) if isinstance(i, str) else i for i in name_list]
         succeed_name_id_list = []
 
@@ -328,6 +329,7 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
             self.session.commit()
         except SQLAlchemyError as e:
             logger.error(f'An error occurred when saving {name_id_list_object} to database: {e}')
+            self.session.rollback()
             for i in name_id_list_object:
                 try:
                     self.session.merge(i)
@@ -529,11 +531,23 @@ class PictureItemPipeline(DataBasePipeline):
             raise DropItem('No name in PictureItem')
 
         # noinspection PyTypeChecker
-        anime_id: NameID = self.session.query(NameID).filter(NameID.name == adapter.get('name')).first()
-        if anime_id:
-            with open(join(self.save_path, f'{anime_id.id}.jpg'), 'wb') as f:
+        anime_id = self.select_name_id_in_list(adapter.get('name'))
+        if len(anime_id) == 1:
+            anime_id = anime_id.pop()
+            with open(join(self.save_path, f'{anime_id}.jpg'), 'wb') as f:
                 f.write(adapter.get('picture'))
         else:
             logger.error(f'Could not find id for name: {adapter.get("name")}')
 
         return item
+
+    def select_name_id_in_list(self, name_list: tuple[str]) -> set[int]:
+        """
+        根据名称列表查询对应的anime_id集合。
+
+        :param name_list: 需要查询的名称列表。
+        :return: 查询到的anime_id集合。
+        """
+        # noinspection PyUnresolvedReferences
+        anime_id_object = self.session.query(NameID).filter(NameID.name.in_(name_list)).all()
+        return {i.id for i in anime_id_object}

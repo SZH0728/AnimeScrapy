@@ -77,6 +77,7 @@ class MetaDataSpiderMiddleware(object):
 
         for i in start_requests:
             i.meta['anime'] = set(anime)
+            i.meta['picture'] = {}
             yield i
 
 

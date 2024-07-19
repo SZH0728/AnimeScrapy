@@ -1,6 +1,6 @@
 from typing import Iterable
 from re import compile
-from datetime import date as date
+from datetime import date
 
 from scrapy import Spider, Request, Selector
 from scrapy.http import Response
@@ -96,7 +96,13 @@ class BangumiSpider(Spider):
         yield score
 
         if detail['name'] not in response.meta['anime'] and picture_url:
-            yield response.follow(picture_url, callback=self.parse_picture, meta=response.meta)
+            if detail['alias']:
+                name_list = (detail['name'], detail['translation'], *detail['alias'])
+            else:
+                name_list = (detail['name'], detail['translation'])
+
+            response.meta['picture'][picture_url] = name_list
+            yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
 
     @staticmethod
     def parse_picture(response: Response):
