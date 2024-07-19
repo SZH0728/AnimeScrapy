@@ -7,6 +7,9 @@ from schedule import run_pending
 import scheduler
 
 if __name__ == '__main__':
-    while True:
-        run_pending()
-        sleep(1)
+    try:
+        while True:
+            run_pending()
+            sleep(1)
+    except KeyboardInterrupt:
+        print('exit successfully')
