@@ -20,7 +20,7 @@ class BangumiSpider(Spider):
     ]
 
     def start_requests(self) -> Iterable[Request]:
-        return [Request(url='https://bangumi.tv/calendar', callback=self.parse_calendar)]
+        return [Request(url='https://bangumi.tv/subject/456166', callback=self.parse_detail)]
 
     def parse(self, response: Response):
         pass
@@ -40,6 +40,7 @@ class BangumiSpider(Spider):
 
         detail = DetailItem()
         detail['name'] = response.xpath(r'//*[@id="headerSubject"]/h1/a/text()')[0].get()
+        detail['translation'] = None
 
         description = response.xpath(r'//*[@id="subject_summary"]/text()')
         detail['description'] = '\n'.join([i.get().strip() for i in description])

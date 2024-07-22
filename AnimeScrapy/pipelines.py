@@ -41,6 +41,8 @@ class ScoreItemOperationMixIn(object):
 
         # 遍历detail_score计算总投票数和总分数
         for i in detail_score.values():
+            if float(i['score']) == 0.0:
+                continue
             vote_sum += i['vote']
             score_sum += i['vote'] * float(i['score'])
 
@@ -106,6 +108,7 @@ class DataBasePipeline(ABC):
         """
         self.session.commit()
         self.session.close()
+        self.session.remove()
 
     def process_item(self, item: Item, spider: Spider):
         """
@@ -551,6 +554,7 @@ class PictureItemPipeline(DataBasePipeline):
         :param name_list: 需要查询的名称列表。
         :return: 查询到的anime_id集合。
         """
+        name_list = [i for i in name_list if i]
         # noinspection PyUnresolvedReferences
         anime_id_object = self.session.query(NameID).filter(NameID.name.in_(name_list)).all()
         return {i.id for i in anime_id_object}
