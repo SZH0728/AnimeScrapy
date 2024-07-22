@@ -69,8 +69,26 @@ class AnikoreSpider(Spider):
         detail['name'] = response.xpath(r'//*[@id="page-top"]/section[4]/div/h1/text()').get().strip()
         detail['description'] = response.xpath(r'string(//*[@id="page-top"]/section[6]/blockquote)').get()
 
-        time = response.xpath(r'//*[@id="page-top"]/section[7]/dl/div[2]/dd/a/text()').get()
-        detail['time'] = datetime.strptime(time, '%Y年%m月%d日').date()
+        time: str = response.xpath(r'//*[@id="page-top"]/section[7]/dl/div[2]/dd/a/text()').get()
+        if time:
+            try:
+                detail['time'] = datetime.strptime(time, '%Y年%m月%d日').date()
+            except ValueError:
+                year, season = time.split('年')
+                match season:
+                    case '冬アニメ':
+                        season = 'D'
+                    case '春アニメ':
+                        season = 'C'
+                    case '夏アニメ':
+                        season = 'X'
+                    case '秋アニメ':
+                        season = 'Q'
+                detail['season'] = year[2:] + season
+
+        detail['alias'] = []
+        detail['tag'] = []
+        detail['cast'] = []
         detail['web'], detail['webId'] = ANIME_PATTERN.findall(response.url)[0]
 
         picture_url: str = response.xpath(r'//*[@id="page-top"]/section[4]/div/div[1]/div/img/@data-src').get()
@@ -79,11 +97,11 @@ class AnikoreSpider(Spider):
 
         yield detail
 
-        response.meta['picture'][picture_url] = (detail['name'], )
+        response.meta['picture'][picture_url] = (detail['name'],)
         yield response.follow(picture_url, callback=self.parse_picture, meta=response.meta)
 
     @staticmethod
-    def parse_picture(self, response: Response):
+    def parse_picture(response: Response):
         picture = PictureItem()
         picture['name'] = response.meta['picture'][response.url]
         picture['picture'] = response.body

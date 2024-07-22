@@ -39,7 +39,7 @@ def anime():
     name = [
         *[i.name for i in result],
         *[i.translation for i in result],
-        *[alia for i in result for alia in i.alias]
+        *[alia for i in result if i for alia in i.alias]
     ]
     name = [i for i in name if i]
     with open('anime.txt', 'w', encoding='utf-8') as f:
