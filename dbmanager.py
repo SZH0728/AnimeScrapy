@@ -4,8 +4,8 @@ from configparser import ConfigParser
 from os.path import abspath, dirname, join
 
 from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, CHAR, DECIMAL
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 from sqlalchemy.dialects.mysql import TINYINT, MEDIUMINT
+from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
 
 config = ConfigParser()
 current_dir = dirname(abspath(__file__))
@@ -87,6 +87,7 @@ class Web(Base):
     name = Column(CHAR(16), nullable=False)
     host = Column(CHAR(16), nullable=False)
     url_format = Column('format', String(16), nullable=False)
+    priority = Column(TINYINT, nullable=False)
 
 
 if __name__ == '__main__':

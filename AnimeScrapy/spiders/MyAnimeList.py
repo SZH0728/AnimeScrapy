@@ -1,6 +1,6 @@
-from typing import Iterable
-from datetime import date, datetime
+from datetime import datetime
 from re import compile
+from typing import Iterable
 
 from scrapy import Request, Spider, Selector
 from scrapy.http import Response
@@ -27,8 +27,7 @@ class MyanimelistSpider(Spider):
     allowed_domains = ["myanimelist.net"]
 
     def start_requests(self) -> Iterable[Request]:
-        # return [Request(url='https://myanimelist.net/anime/season', callback=self.parse_list, meta={'detail': {}})]
-        return [Request(url='https://myanimelist.net/anime/58426/Shikanoko_Nokonoko_Koshitantan', callback=self.parse_detail, meta={'detail': {}})]
+        return [Request(url='https://myanimelist.net/anime/season', callback=self.parse_list, meta={'detail': {}})]
 
     def parse(self, response: Response):
         pass

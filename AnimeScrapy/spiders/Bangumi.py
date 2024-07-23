@@ -1,6 +1,6 @@
-from typing import Iterable
-from re import compile
 from datetime import date
+from re import compile
+from typing import Iterable
 
 from scrapy import Spider, Request, Selector
 from scrapy.http import Response
@@ -20,7 +20,7 @@ class BangumiSpider(Spider):
     ]
 
     def start_requests(self) -> Iterable[Request]:
-        return [Request(url='https://bangumi.tv/subject/456166', callback=self.parse_detail)]
+        return [Request(url='https://bangumi.tv/calendar', callback=self.parse_calendar)]
 
     def parse(self, response: Response):
         pass
