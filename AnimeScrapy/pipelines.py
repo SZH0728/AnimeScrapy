@@ -6,18 +6,18 @@
 
 # useful for handling different item types with a single interface
 from abc import ABC, abstractmethod
-from datetime import date
-from os.path import join, dirname, abspath, normpath
-from logging import getLogger
 from copy import deepcopy
+from datetime import date
+from logging import getLogger
+from os.path import join, dirname, abspath, normpath
 from typing import Iterable
 
 from itemadapter import ItemAdapter
 from scrapy import Spider, Item
 from scrapy.exceptions import DropItem
 from sqlalchemy import and_
-from sqlalchemy.orm import scoped_session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import scoped_session
 
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 from dbmanager import Session, NameID, Detail, Web, Score, Cache
@@ -108,7 +108,6 @@ class DataBasePipeline(ABC):
         """
         self.session.commit()
         self.session.close()
-        self.session.remove()
 
     def process_item(self, item: Item, spider: Spider):
         """
@@ -155,6 +154,19 @@ class DataBasePipeline(ABC):
         else:
             raise DropItem(f'{link} is not a valid web link')
 
+    def select_web_by_id(self, id_: int) -> Web:
+        """
+        根据ID查询Web实体。
+
+        :param id_: 需要查询的Web ID。
+        :return: 查询到的Web实体，如果没有找到，则抛出DropItem异常。
+        """
+        web = self.session.query(Web).filter_by(id=id_).first()
+        if web:
+            return web
+        else:
+            raise DropItem(f'Web with id {id_} does not exist')
+
 
 class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
     def __init__(self):
@@ -195,9 +207,10 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
             anime_id = name_id.pop()
             detail_object = self.select_detail_object_by_id(anime_id)
 
-            # 检查当前网站是否为特定网站（如Bangumi），如果是则更新Detail对象
+            # 检查当前网站数据是否比之前的网站优先级高
             cur_web = self.select_web_by_link(adapter.get('web'))
-            if cur_web.name == 'Bangumi':
+            pre_web = self.select_web_by_id(detail_object.web)
+            if cur_web.priority < pre_web.priority:
                 self.update_detail_object(detail_object, adapter)
 
             # 将名称与已存在的Detail ID关联

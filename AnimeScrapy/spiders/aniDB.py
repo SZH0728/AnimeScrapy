@@ -1,8 +1,8 @@
-from typing import Iterable
 from datetime import datetime
 from re import compile
+from typing import Iterable
 
-from scrapy import Request, Spider, Selector
+from scrapy import Request, Spider
 from scrapy.http import Response
 
 from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
@@ -65,17 +65,19 @@ class AnidbSpider(Spider):
         detail['alias'] = name_box
 
         time = response.xpath(
-            r'//*[@id="tab_1_pane"]/div/table/tbody/tr[contains(@class, "year")]/td/span[1]/@content'
-        ).get()
-        detail['time'] = datetime.strptime(time, '%Y-%m-%d').date()
+            r'//*[@id="tab_1_pane"]/div/table/tbody/tr[contains(@class, "year")]/td/span[1]/@content').get()
+        if time:
+            detail['time'] = datetime.strptime(time, '%Y-%m-%d').date()
+        else:
+            self.logger.error(f'Could not find time for {detail["name"]}')
 
         detail['tag'] = [i.xpath(r'./a/span[1]/text()').get()
-                                for i in response.xpath(
+                         for i in response.xpath(
                 r'//*[@id="tab_1_pane"]/div/table/tbody/tr[contains(@class, "tags")]/td/span')]
 
         detail['director'] = response.xpath(r'//*[@id="staffoverview"]/tbody/tr[2]/td[2]/a/span[2]/text()').get()
         detail['cast'] = [i.xpath(r'./td[1]/a/text()').get()
-                                 for i in response.xpath(r'//*[@id="castoverview"]/tbody/tr')]
+                          for i in response.xpath(r'//*[@id="castoverview"]/tbody/tr')]
 
         detail['description'] = response.xpath(
             r'string(//*[@id="layout-main"]/div[2]/div[@itemprop="description"])'

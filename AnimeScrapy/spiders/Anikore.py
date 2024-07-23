@@ -1,15 +1,15 @@
-from typing import Iterable
-from datetime import date, datetime
+from datetime import datetime
 from re import compile
+from typing import Iterable
 
 from pytz import timezone
-from scrapy import Request, Spider, Selector
+from scrapy import Request, Spider
 from scrapy.http import Response
 
 from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
 
 TZ = timezone('Asia/Shanghai')
-GET_NAME = compile(r'(.*?)（.*?）')
+GET_NAME = compile(r'「(.*?)（.*?）」')
 URL_PATTERN = compile(r'https?://(.*?)/.*?')
 ANIME_PATTERN = compile(r'https?://(.*?)/anime/(\d+)/')
 
@@ -66,7 +66,8 @@ class AnikoreSpider(Spider):
 
     def parse_detail(self, response: Response):
         detail = DetailItem()
-        detail['name'] = response.xpath(r'//*[@id="page-top"]/section[4]/div/h1/text()').get().strip()
+        name = response.xpath(r'//*[@id="page-top"]/section[4]/div/h1/text()').get().strip()
+        detail['name'] = GET_NAME.findall(name)[0]
         detail['description'] = response.xpath(r'string(//*[@id="page-top"]/section[6]/blockquote)').get()
 
         time: str = response.xpath(r'//*[@id="page-top"]/section[7]/dl/div[2]/dd/a/text()').get()
@@ -84,6 +85,8 @@ class AnikoreSpider(Spider):
                         season = 'X'
                     case '秋アニメ':
                         season = 'Q'
+                    case _:
+                        raise ValueError(f'{season} is not a valid season')
                 detail['season'] = year[2:] + season
 
         detail['alias'] = []
