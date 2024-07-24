@@ -7,18 +7,18 @@ from datetime import date, datetime
 from os.path import abspath, join, dirname, normpath
 from typing import Iterable
 
+import scrapy.http.response
+from itemadapter import is_item, ItemAdapter
 from pytz import timezone
 from scrapy import Spider, Request
 from scrapy.exceptions import IgnoreRequest
-import scrapy.http.response
-# useful for handling different item types with a single interface
-from itemadapter import is_item, ItemAdapter
 
 from AnimeScrapy.items import DetailItem, ScoreItem
 
 TZ = timezone('Asia/Shanghai')
 
 
+# noinspection PyUnusedLocal
 class DetailItemSpiderMiddleware(object):
     @staticmethod
     def process_spider_output(response: scrapy.http.response, result, spider: Spider):
@@ -51,6 +51,7 @@ class DetailItemSpiderMiddleware(object):
                 yield i
 
 
+# noinspection PyUnusedLocal
 class ScoreItemSpiderMiddleware(object):
     @staticmethod
     def process_spider_output(response: scrapy.http.response, result, spider: Spider):
@@ -66,6 +67,7 @@ class ScoreItemSpiderMiddleware(object):
                 yield i
 
 
+# noinspection PyUnusedLocal
 class MetaDataSpiderMiddleware(object):
     @staticmethod
     def process_start_requests(start_requests: Iterable[Request], spider: Spider):
@@ -81,6 +83,7 @@ class MetaDataSpiderMiddleware(object):
             yield i
 
 
+# noinspection PyUnusedLocal
 class FilterDetailRequestDownloaderMiddleware(object):
     @staticmethod
     def process_request(request: Request, spider: Spider):

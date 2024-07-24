@@ -16,7 +16,7 @@ from itemadapter import ItemAdapter
 from scrapy import Spider, Item
 from scrapy.exceptions import DropItem
 from sqlalchemy import and_
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, PendingRollbackError
 from sqlalchemy.orm import scoped_session
 
 from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
@@ -92,23 +92,6 @@ class DataBasePipeline(ABC):
         self.target = target
         self.session: scoped_session[Session] | None = None
 
-    def open_spider(self, spider: Spider):
-        """
-        当Spider启动时，创建一个新的数据库会话。
-
-        :param spider: 正在运行的Spider实例。
-        """
-        self.session = Session()
-
-    def close_spider(self, spider: Spider):
-        """
-        当Spider停止时，提交所有未完成的事务并关闭会话。
-
-        :param spider: 正在运行的Spider实例。
-        """
-        self.session.commit()
-        self.session.close()
-
     def process_item(self, item: Item, spider: Spider):
         """
         处理特定类型的Item，实现具体的数据处理逻辑。
@@ -118,14 +101,12 @@ class DataBasePipeline(ABC):
         :return: 处理后的Item实例。
         """
         if isinstance(item, self.target):
-            with self.session.no_autoflush:
-                item = self.process(item, spider)
-
+            with Session.begin() as self.session:
                 try:
-                    self.session.commit()
-                except SQLAlchemyError as e:
+                    item = self.process(item, spider)
+                except PendingRollbackError:
                     self.session.rollback()
-                    raise DropItem(f'An error occurred while committing the transaction: {e}')
+                    logger.error(f'Missing rollback when processing item {item}', exc_info=True)
 
         return item
 
@@ -163,6 +144,7 @@ class DataBasePipeline(ABC):
         """
         web = self.session.query(Web).filter_by(id=id_).first()
         if web:
+            # noinspection PyTypeChecker
             return web
         else:
             raise DropItem(f'Web with id {id_} does not exist')
@@ -339,7 +321,11 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         :param id_: 关联的目标id。
         :return: 成功关联的NameID对象列表。
         """
-        name_list = set(name_list)
+        name_list = {i if isinstance(i, str) else i.name for i in name_list}
+        # noinspection PyUnresolvedReferences,PyTypeChecker
+        exist_name_id = self.session.query(NameID).filter(NameID.name.in_(name_list)).all()
+        exist_name = {i.name for i in exist_name_id}
+        name_list = name_list.difference(exist_name)
         name_id_list_object = [NameID(name=i, id=id_) if isinstance(i, str) else i for i in name_list]
         succeed_name_id_list = []
 
