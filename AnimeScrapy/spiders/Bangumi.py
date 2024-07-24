@@ -97,6 +97,7 @@ class BangumiSpider(Spider):
         yield score
 
         if detail['name'] not in response.meta['anime'] and picture_url:
+            # noinspection DuplicatedCode
             if detail['alias']:
                 name_list = (detail['name'], detail['translation'], *detail['alias'])
             else:

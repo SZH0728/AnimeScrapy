@@ -5,7 +5,7 @@ from os.path import abspath, dirname, join
 
 from sqlalchemy import create_engine, Column, Integer, String, Text, Date, JSON, CHAR, DECIMAL
 from sqlalchemy.dialects.mysql import TINYINT, MEDIUMINT
-from sqlalchemy.orm import sessionmaker, scoped_session, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 config = ConfigParser()
 current_dir = dirname(abspath(__file__))
@@ -27,10 +27,7 @@ Base = declarative_base()
 Engine = create_engine(DB_URI, pool_recycle=28000)
 
 # 创建sessionmaker绑定到数据库引擎
-SessionFactory = sessionmaker(bind=Engine)
-
-# 创建scoped_session以确保每个线程都有独立的session实例
-Session = scoped_session(SessionFactory)
+Session = sessionmaker(bind=Engine, autoflush=False)
 
 
 class Cache(Base):
@@ -96,10 +93,10 @@ if __name__ == '__main__':
 
     session = Session()
     session.add_all((
-        Web(name='Bangumi', host='bangumi.tv', url_format='/subject/{}'),
-        Web(name='Anikore', host='www.anikore.jp', url_format='/anime/{}'),
-        Web(name='aniDB', host='anidb.net', url_format='/anime/{}'),
-        Web(name='MyAnimeList', host='myanimelist.net', url_format='/anime/{}'),
+        Web(name='Bangumi', host='bangumi.tv', url_format='/subject/{}', priority=10),
+        Web(name='Anikore', host='www.anikore.jp', url_format='/anime/{}', priority=30),
+        Web(name='aniDB', host='anidb.net', url_format='/anime/{}', priority=20),
+        Web(name='MyAnimeList', host='myanimelist.net', url_format='/anime/{}', priority=20),
     ))
 
     session.commit()

@@ -89,6 +89,7 @@ class AnidbSpider(Spider):
 
         yield detail
 
+        # noinspection DuplicatedCode
         if detail['alias']:
             name_list = (detail['name'], detail['translation'], *detail['alias'])
         else:
