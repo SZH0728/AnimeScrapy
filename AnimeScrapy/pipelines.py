@@ -275,11 +275,12 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         detail_object = Detail()
         self.update_detail_object(detail_object, adapter)
 
+        save_point = self.session.begin_nested()
         try:
             self.session.add(detail_object)
-            self.session.commit()
+            self.session.flush()
         except SQLAlchemyError as e:
-            self.session.rollback()
+            save_point.rollback()
             raise DropItem(f'An error occurred when saving {detail_object} to database: {e}')
 
         return detail_object
@@ -305,11 +306,12 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         }
 
         self.update_score_and_vote(score_object)
+        save_point = self.session.begin_nested()
         try:
             self.session.add(score_object)
-            self.session.commit()
+            self.session.flush()
         except SQLAlchemyError as e:
-            self.session.rollback()
+            save_point.rollback()
             logger.error(f'An error occurred when saving {score_object} to database: {e}')
         return score_object
 
@@ -329,18 +331,21 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         name_id_list_object = [NameID(name=i, id=id_) if isinstance(i, str) else i for i in name_list]
         succeed_name_id_list = []
 
+        save_point = self.session.begin_nested()
         try:
             self.session.add_all(name_id_list_object)
-            self.session.commit()
+            self.session.flush()
         except SQLAlchemyError as e:
+            save_point.rollback()
             logger.error(f'An error occurred when saving {name_id_list_object} to database: {e}')
             self.session.rollback()
             for i in name_id_list_object:
+                save_point = self.session.begin_nested()
                 try:
                     self.session.merge(i)
-                    self.session.commit()
+                    self.session.flush()
                 except SQLAlchemyError as e:
-                    self.session.rollback()
+                    save_point.rollback()
                     logger.error(f'An error occurred when saving {i} to database: {e}')
                 else:
                     succeed_name_id_list.append(i)
@@ -413,11 +418,12 @@ class DetailItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         :param cache_list: 需要清除的Cache对象列表。
         """
         for i in cache_list:
+            save_point = self.session.begin_nested()
             try:
                 self.session.delete(i)
-                self.session.commit()
+                self.session.flush()
             except SQLAlchemyError as e:
-                self.session.rollback()
+                save_point.rollback()
                 logger.error(f'An error occurred when deleting {i} from database: {e}')
 
 

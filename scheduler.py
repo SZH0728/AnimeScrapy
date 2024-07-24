@@ -1,14 +1,17 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: SUN
+from logging import getLogger
 from multiprocessing import Process
+from typing import Callable
 
 from schedule import every, repeat
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
-from dbmanager import Session, Detail
 from AnimeScrapy.spiders import *
+from dbmanager import Session, Detail
 
+logger = getLogger(__name__)
 
 SPIDER = (
     aniDB.AnidbSpider,
@@ -16,6 +19,18 @@ SPIDER = (
     Bangumi.BangumiSpider,
     MyAnimeList.MyanimelistSpider
 )
+
+
+def catch_exception(function: Callable):
+    def wrapper(*args, **kwargs):
+        try:
+            result = function(*args, **kwargs)
+        except Exception as e:
+            logger.error(f'An error occurred in {function.__name__}', exc_info=True)
+        else:
+            return result
+
+    return wrapper
 
 
 def start_spider():
@@ -27,12 +42,14 @@ def start_spider():
 
 
 @repeat(every().day.at("20:00", "Asia/Shanghai"))
+@catch_exception
 def spider():
     spider_process = Process(target=start_spider)
     spider_process.start()
 
 
 @repeat(every().day.at("04:00", "Asia/Shanghai"))
+@catch_exception
 def anime():
     session = Session()
     result = session.query(Detail).filter(Detail.webId is not None)
@@ -48,4 +65,5 @@ def anime():
 
 if __name__ == '__main__':
     from schedule import run_all
+
     run_all()
