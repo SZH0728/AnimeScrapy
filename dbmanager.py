@@ -24,7 +24,7 @@ DB_URI = f'mariadb+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DB}'
 Base = declarative_base()
 
 # 创建数据库引擎
-Engine = create_engine(DB_URI, pool_recycle=28000)
+Engine = create_engine(DB_URI, pool_recycle=7200, pool_pre_ping=True)
 
 # 创建sessionmaker绑定到数据库引擎
 Session = sessionmaker(bind=Engine, autoflush=False)
