@@ -9,7 +9,7 @@ from scrapy.http import Response
 from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
 
 TZ = timezone('Asia/Shanghai')
-GET_NAME = compile(r'「(.*?)（.*?）」')
+GET_NAME = compile(r'「?(.*?)（.*?）」?')
 URL_PATTERN = compile(r'https?://(.*?)/.*?')
 ANIME_PATTERN = compile(r'https?://(.*?)/anime/(\d+)/')
 

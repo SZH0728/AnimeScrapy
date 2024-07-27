@@ -101,12 +101,18 @@ class DataBasePipeline(ABC):
         :return: 处理后的Item实例。
         """
         if isinstance(item, self.target):
-            with Session.begin() as self.session:
-                try:
-                    item = self.process(item, spider)
-                except PendingRollbackError:
-                    self.session.rollback()
-                    logger.error(f'Missing rollback when processing item {item}', exc_info=True)
+            self.session = Session()
+            try:
+                item = self.process(item, spider)
+                self.session.commit()
+            except PendingRollbackError:
+                self.session.rollback()
+                logger.error(f'Missing rollback when processing item {item}', exc_info=True)
+            except Exception as e:
+                self.session.rollback()
+                logger.error(f'Error when processing item {item}: {e}', exc_info=True)
+            finally:
+                self.session.close()
 
         return item
 

@@ -68,7 +68,7 @@ class MyanimelistSpider(Spider):
             text = text.strip()
             text = REPLACE_BLANK_TEXT.sub(' ', text)
 
-            match text.split(':'):
+            match text.split(':', 1):
                 case 'Japanese', name:
                     detail['name'] = name.strip()
                 case (language, name) if language in LANGUAGES:
@@ -77,8 +77,15 @@ class MyanimelistSpider(Spider):
                     time = time.split(' to ')[0].strip()
                     detail['time'] = datetime.strptime(time, '%b %d, %Y').date()
 
-        detail['translation'] = response.xpath(
-            r'//*[@id="contentWrapper"]/div[1]/div/div[1]/div/p/text()').get().strip()
+        translation = response.xpath(r'//*[contains(@class, "h1-title")]//text()')
+        match len(translation):
+            case 1:
+                detail['translation'] = translation[0].get().strip()
+            case 2:
+                detail['translation'] = translation[1].get().strip()
+            case _:
+                raise ValueError(f'Invalid translation on page {response.url}')
+
         detail['description'] = response.xpath(r'string(//p[contains(@itemprop, "description")])').get()
         detail['web'], detail['webId'] = ANIME_PATTERN.findall(response.url)[0]
         picture_url = response.xpath(r'//div[contains(@class, "leftside")]/div/a/img/@data-src').get()
@@ -98,7 +105,15 @@ class MyanimelistSpider(Spider):
 
     @staticmethod
     def parse_character(response: Response):
-        name = response.xpath(r'//*[@id="contentWrapper"]/div[1]/div/div[1]/div/p/text()').get()
+        name = response.xpath(r'//*[contains(@class, "h1-title")]//text()')
+        match len(name):
+            case 1:
+                name = name[0].get().strip()
+            case 2:
+                name = name[1].get().strip()
+            case _:
+                raise ValueError(f'Invalid translation on page {response.url}')
+
         detail = response.meta['detail'][name]
 
         casts = []
