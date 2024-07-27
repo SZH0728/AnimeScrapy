@@ -6,11 +6,13 @@ from typing import Callable
 
 from schedule import every, repeat
 from scrapy.crawler import CrawlerProcess
+from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 
 from AnimeScrapy.spiders import *
 from dbmanager import Session, Detail
 
+configure_logging(get_project_settings())
 logger = getLogger(__name__)
 
 SPIDER = (
@@ -26,7 +28,7 @@ def catch_exception(function: Callable):
         try:
             result = function(*args, **kwargs)
         except Exception as e:
-            logger.error(f'An error occurred in {function.__name__}', exc_info=True)
+            logger.error(f'An error occurred in {function.__name__}: {e}', exc_info=True)
         else:
             return result
 
