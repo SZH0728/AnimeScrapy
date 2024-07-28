@@ -53,16 +53,16 @@ def spider():
 @repeat(every().day.at("04:00", "Asia/Shanghai"))
 @catch_exception
 def anime():
-    session = Session()
-    result = session.query(Detail).filter(Detail.webId is not None)
-    name = [
-        *[i.name for i in result],
-        *[i.translation for i in result],
-        *[alia for i in result if i for alia in i.alias]
-    ]
-    name = [i for i in name if i]
-    with open('anime.txt', 'w', encoding='utf-8') as f:
-        f.write('\n'.join(name))
+    with Session.begin() as session:
+        result = session.query(Detail).filter(Detail.webId is not None)
+        name = [
+            *[i.name for i in result],
+            *[i.translation for i in result],
+            *[alia for i in result if i for alia in i.alias]
+        ]
+        name = [i for i in name if i]
+        with open('anime.txt', 'w', encoding='utf-8') as f:
+            f.write('\n'.join(name))
 
 
 if __name__ == '__main__':
