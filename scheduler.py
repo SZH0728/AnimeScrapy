@@ -43,7 +43,7 @@ def start_spider():
     crawler.start()
 
 
-@repeat(every().day.at("20:00", "Asia/Shanghai"))
+@repeat(every().day.at("18:00", "Asia/Shanghai"))
 @catch_exception
 def spider():
     spider_process = Process(target=start_spider)
