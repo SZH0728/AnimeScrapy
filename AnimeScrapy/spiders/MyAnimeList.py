@@ -27,7 +27,7 @@ class MyanimelistSpider(Spider):
     allowed_domains = ["myanimelist.net"]
 
     def start_requests(self) -> Iterable[Request]:
-        return [Request(url='https://myanimelist.net/anime/season', callback=self.parse_list, meta={'detail': {}})]
+        return [Request(url='https://myanimelist.net/anime/59564/Midnight_Vampire', callback=self.parse_detail, meta={'detail': {}})]
 
     def parse(self, response: Response):
         pass
@@ -85,6 +85,11 @@ class MyanimelistSpider(Spider):
                 detail['translation'] = translation[1].get().strip()
             case _:
                 raise ValueError(f'Invalid translation on page {response.url}')
+
+        try:
+            detail['name']
+        except KeyError:
+            detail['name'] = detail['translation']
 
         detail['description'] = response.xpath(r'string(//p[contains(@itemprop, "description")])').get()
         detail['web'], detail['webId'] = ANIME_PATTERN.findall(response.url)[0]

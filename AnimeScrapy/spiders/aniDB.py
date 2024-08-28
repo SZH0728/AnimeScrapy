@@ -89,14 +89,15 @@ class AnidbSpider(Spider):
 
         yield detail
 
-        # noinspection DuplicatedCode
-        if detail['alias']:
-            name_list = (detail['name'], detail['translation'], *detail['alias'])
-        else:
-            name_list = (detail['name'], detail['translation'])
+        if picture_url:
+            # noinspection DuplicatedCode
+            if detail['alias']:
+                name_list = (detail['name'], detail['translation'], *detail['alias'])
+            else:
+                name_list = (detail['name'], detail['translation'])
 
-        response.meta['picture'][picture_url] = name_list
-        yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
+            response.meta['picture'][picture_url] = name_list
+            yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
 
     @staticmethod
     def parse_picture(response: Response):
