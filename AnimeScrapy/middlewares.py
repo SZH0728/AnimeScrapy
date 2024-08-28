@@ -75,7 +75,7 @@ class MetaDataSpiderMiddleware(object):
         parent_dir = normpath(join(current_dir, '..'))
         path = join(parent_dir, 'anime.txt')
         with open(path, 'r', encoding='utf-8') as f:
-            anime = f.read().split()
+            anime = f.read().split('\n')
 
         for i in start_requests:
             i.meta['anime'] = set(anime)
