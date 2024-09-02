@@ -26,6 +26,15 @@ class DetailItemSpiderMiddleware(object):
             if is_item(i) and isinstance(i, DetailItem):
                 adapter = ItemAdapter(i)
 
+                name = adapter.get('name')
+                translation = adapter.get('translation')
+                alias: list = adapter.get('alias')
+                if name in alias:
+                    alias.remove(name)
+                if translation in alias:
+                    alias.remove(translation)
+                adapter['alias'] = alias
+
                 if not adapter.get('time'):
                     yield adapter.item
                     continue
