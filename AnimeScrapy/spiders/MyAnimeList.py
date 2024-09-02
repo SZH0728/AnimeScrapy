@@ -27,7 +27,7 @@ class MyanimelistSpider(Spider):
     allowed_domains = ["myanimelist.net"]
 
     def start_requests(self) -> Iterable[Request]:
-        return [Request(url='https://myanimelist.net/anime/59564/Midnight_Vampire', callback=self.parse_detail, meta={'detail': {}})]
+        return [Request(url='https://myanimelist.net/anime/season', callback=self.parse_list, meta={'detail': {}})]
 
     def parse(self, response: Response):
         pass
@@ -82,6 +82,7 @@ class MyanimelistSpider(Spider):
             case 1:
                 detail['translation'] = translation[0].get().strip()
             case 2:
+                detail['alias'].append(translation[0].get().strip())
                 detail['translation'] = translation[1].get().strip()
             case _:
                 raise ValueError(f'Invalid translation on page {response.url}')
