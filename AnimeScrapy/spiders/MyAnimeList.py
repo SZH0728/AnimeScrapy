@@ -33,25 +33,11 @@ class MyanimelistSpider(Spider):
         pass
 
     def parse_list(self, response: Response):
-        for i in response.xpath(
-                r'//*[@id="content"]/div[3]/div[contains(@class, "seasonal-anime-list")]'
-                r'/div[contains(@class, "seasonal-anime")]'):
-            score = ScoreItem()
-
-            score['name'] = i.xpath(r'./div[1]/div[1]/span[4]/text()').get()
-            score['score'] = float(i.xpath(r'./div[1]/div[1]/span[2]/text()').get())
-            score['vote'] = int(i.xpath(r'./div[1]/div[1]/span[1]/text()').get())
-            score['source'] = URL_PATTERN.findall(response.url)[0]
-
-            yield score
-
         urls = []
         for i in response.xpath(
                 r'//*[@id="content"]/div[3]/div[contains(@class, "seasonal-anime-list")]/'
                 r'div[contains(@class, "seasonal-anime")]'):
-            name = i.xpath(r'./div[1]/div[1]/span[4]/text()').get()
-            if name not in response.meta['anime']:
-                urls.append(i.xpath(r'./div[1]/div[1]/div/h2/a/@href').get())
+            urls.append(i.xpath(r'./div[1]/div[1]/div/h2/a/@href').get())
 
         yield from response.follow_all(urls, callback=self.parse_detail, meta=response.meta)
 
@@ -109,6 +95,17 @@ class MyanimelistSpider(Spider):
         response.meta['picture'][picture_url] = tuple(set(name_list))
         yield response.follow(url=picture_url, callback=self.parse_picture, meta=response.meta)
 
+        score_element = response.xpath(r'//span[contains(@itemprop, "ratingValue")]/text()')
+        if len(score_element) != 0:
+            score = ScoreItem()
+            score['name'] = detail['name']
+            score['source'] = URL_PATTERN.findall(response.url)[0]
+
+            score['score'] = float(score_element[0].get())
+            score['vote'] = int(response.xpath(r'//span[contains(@itemprop, "ratingCount")]/text()')[0].get())
+
+            yield score
+
     @staticmethod
     def parse_character(response: Response):
         name = response.xpath(r'//*[contains(@class, "h1-title")]//text()')
@@ -146,4 +143,5 @@ class MyanimelistSpider(Spider):
 
 if __name__ == '__main__':
     from scrapy.cmdline import execute
+
     execute('scrapy crawl MyAnimeList'.split())
