@@ -522,12 +522,20 @@ class ScoreItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         score_object.date = score_item.get('date')
 
         web = self.select_web_by_link(score_item.get('source'))
-        score_object.detailScore = {
-            str(web.id): {
-                'score': score_item.get('score'),
-                'vote': score_item.get('vote')
+        if web.name != 'Anikore':
+            score_object.detailScore = {
+                str(web.id): {
+                    'score': score_item.get('score'),
+                    'vote': score_item.get('vote')
+                }
             }
-        }
+        else:
+            score_object.detailScore = {
+                str(web.id): {
+                    'score': score_item.get('score') * 2,
+                    'vote': score_item.get('vote')
+                }
+            }
 
         self.update_score_and_vote(score_object)
         self.session.add(score_object)
