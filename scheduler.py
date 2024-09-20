@@ -41,6 +41,7 @@ def start_spider():
     for i in SPIDER:
         crawler.crawl(i)
     crawler.start()
+    logger.error('spider finished')
 
 
 @repeat(every().day.at("18:00", "Asia/Shanghai"))
