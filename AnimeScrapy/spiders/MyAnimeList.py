@@ -61,7 +61,12 @@ class MyanimelistSpider(Spider):
                     detail['alias'].append(name.strip())
                 case 'Aired', time:
                     time = time.split(' to ')[0].strip()
-                    detail['time'] = datetime.strptime(time, '%b %d, %Y').date()
+                    try:
+                        date = datetime.strptime(time, '%b %d, %Y').date()
+                    except ValueError:
+                        date = datetime.strptime(time, '%b, %Y').date()
+
+                    detail['time'] = date
 
         translation = response.xpath(r'//*[contains(@class, "h1-title")]//text()')
         match len(translation):
