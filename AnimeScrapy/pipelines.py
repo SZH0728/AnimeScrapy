@@ -505,6 +505,9 @@ class ScoreItemPipeline(DataBasePipeline, ScoreItemOperationMixIn):
         web = self.select_web_by_link(adapter.get('source'))
         cache_object.web = web.id
 
+        if web.name == 'Anikore':
+            cache_object.score = adapter.get('score') * 2
+
         self.session.add(cache_object)
         return cache_object
 
