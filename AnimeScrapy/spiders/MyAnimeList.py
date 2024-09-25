@@ -64,7 +64,7 @@ class MyanimelistSpider(Spider):
                     try:
                         date = datetime.strptime(time, '%b %d, %Y').date()
                     except ValueError:
-                        date = datetime.strptime(time, '%b, %Y').date()
+                        date = datetime.strptime(time, '%b %Y').date()
 
                     detail['time'] = date
 
