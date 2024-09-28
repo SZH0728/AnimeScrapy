@@ -2,14 +2,17 @@ from datetime import datetime
 from re import compile
 from typing import Iterable
 
+from pytz import timezone
 from scrapy import Request, Spider, Selector
 from scrapy.http import Response
 
 from AnimeScrapy.items import ScoreItem, DetailItem, PictureItem
 
+TZ = timezone('Asia/Shanghai')
 URL_PATTERN = compile(r'https?://(.*?)/.*?')
 ANIME_PATTERN = compile(r'https?://(.*?)/anime/(\d+)/.*')
 REPLACE_BLANK_TEXT = compile(r'[\s\n]+')
+TEST_DATE_FORMATE = compile(r'.+\s+\d{1,2},\s+\d{4}')
 LANGUAGES = {"Afrikaans", "Albanian", "Amharic", "Arabic", "Assamese", "Azerbaijani", "Basque", "Belarusian", "Bengali",
              "Bulgarian", "Catalan", "Chinese", "Croatian", "Czech", "Danish", "Dutch", "English", "Esperanto",
              "Estonian", "Faroese", "Finnish", "French", "Georgian", "German", "Greek", "Gujarati", "Hebrew", "Hindi",
@@ -27,7 +30,21 @@ class MyanimelistSpider(Spider):
     allowed_domains = ["myanimelist.net"]
 
     def start_requests(self) -> Iterable[Request]:
-        return [Request(url='https://myanimelist.net/anime/season', callback=self.parse_list, meta={'detail': {}})]
+        today = datetime.now(TZ)
+        year = today.year
+        month = today.month
+
+        if 1 <= month <= 3:
+            season = 'winter'
+        elif 4 <= month <= 6:
+            season = 'spring'
+        elif 7 <= month <= 9:
+            season = 'summer'
+        else:
+            season = 'autumn'
+
+        return [Request(url=f'https://myanimelist.net/anime/season/{year}/{season}',
+                        callback=self.parse_list, meta={'detail': {}})]
 
     def parse(self, response: Response):
         pass
@@ -61,9 +78,9 @@ class MyanimelistSpider(Spider):
                     detail['alias'].append(name.strip())
                 case 'Aired', time:
                     time = time.split(' to ')[0].strip()
-                    try:
-                        date = datetime.strptime(time, '%b %d, %Y').date()
-                    except ValueError:
+                    if TEST_DATE_FORMATE.match(time):
+                        date = datetime.strptime(time, '%B %d, %Y').date()
+                    else:
                         date = datetime.strptime(time, '%b %Y').date()
 
                     detail['time'] = date
