@@ -9,6 +9,7 @@ from AnimeScrapy.items import DetailItem, ScoreItem, PictureItem
 
 DATE_PATTERN = compile(r'(\d{4})年(\d{1,2})月(\d{1,2})日')
 DATE_PATTERN_BACKUP = compile(r'(\d{4})-(\d{1,2})-(\d{1,2})')
+DATE_PATTERN_BACKUP_SECOND = compile(r'(\d{4})年(\d{1,2})月')
 URL_PATTERN = compile(r'https?://(.*?)/subject/(\d+)')
 
 
@@ -65,6 +66,8 @@ class BangumiSpider(Spider):
                     if day:
                         day = day[0]
                         detail['time'] = date(int(day[0]), int(day[1]), int(day[2]))
+                    elif day := DATE_PATTERN_BACKUP_SECOND.findall(i.xpath(r'./text()').get()):
+                        detail['time'] = date(int(day[0]), int(day[1]), 1)
                     else:
                         self.logger.error(f'An error occurred while parsing date: {i.extract()}')
                 case '导演: ':
