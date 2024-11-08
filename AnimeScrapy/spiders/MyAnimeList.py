@@ -79,7 +79,7 @@ class MyanimelistSpider(Spider):
                 case 'Aired', time:
                     time = time.split(' to ')[0].strip()
                     if TEST_DATE_FORMATE.match(time):
-                        date = datetime.strptime(time, '%B %d, %Y').date()
+                        date = datetime.strptime(time, '%b %d, %Y').date()
                     else:
                         date = datetime.strptime(time, '%b %Y').date()
 
