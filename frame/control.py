@@ -22,35 +22,33 @@ class Manager(object):
 
         self.counter = AsyncCounter(len(self.spider.config.HANDLE.INIT_URL))
 
-        self.handle = Handle(self.bridge.A, self.spider.config, self.counter,  methods)
+        self.handle = Handle(self.bridge.A, self.spider.config, self.counter, methods)
         self.request = Requester(self.bridge.B, self.spider.config)
 
     def loop(self):
-        async def main():
-            logger.debug(f'Starting spider: {self.spider.__class__.__name__} in thread ')
-            try:
-                handle_task = create_task(self.handle.loop())
-                request_task = create_task(self.request.loop())
-
-                while await self.counter.get_value() != 0:
-                    await sleep(1)
-
-                await  self.bridge.stop()
-
-                await gather(
-                    handle_task,
-                    request_task,
-                )
-            except Exception as e:
-                logger.error(f'An error occurred: {e}', exc_info=True)
-
-        run(main())
+        run(self.main())
 
     def start(self) -> Thread:
         thread: Thread = Thread(target=self.loop)
         thread.start()
         logger.info(f'Start spider: {self.spider.__class__.__name__}')
         return thread
+
+    async def main(self):
+        logger.debug(f'Starting spider: {self.spider.__class__.__name__} in thread ')
+
+        try:
+            handle_task = create_task(self.handle.loop())
+            request_task = create_task(self.request.loop())
+
+            while await self.counter.value() != 0:
+                await sleep(1)
+
+            await self.bridge.stop()
+
+            await gather(handle_task, request_task)
+        except Exception as e:
+            logger.error(f'An error occurred: {e}', exc_info=True)
 
 
 class Control(object):
