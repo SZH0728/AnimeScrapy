@@ -6,20 +6,20 @@ from asyncio import Lock
 
 class AsyncCounter:
     def __init__(self, init=0):
-        self._value = init
-        self._lock = Lock()
+        self._value: int = init
+        self._lock: Lock = Lock()
 
-    async def increment(self, value: int = 1):
+    async def increment(self, value: int = 1) -> int:
         async with self._lock:
             self._value += value
             return self._value
 
-    async def decrement(self, value: int = 1):
+    async def decrement(self, value: int = 1) -> int:
         async with self._lock:
             self._value -= value
             return self._value
 
-    async def get_value(self):
+    async def value(self)  -> int:
         async with self._lock:
             return self._value
 
