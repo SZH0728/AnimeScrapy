@@ -8,7 +8,7 @@ from logging import getLogger
 
 from httpx import Request, Response
 
-from frame.config import Config
+from frame.config import Config, HandleConfig
 from frame.bridge import Client
 from frame.counter import AsyncCounter
 
@@ -19,25 +19,6 @@ logger = getLogger(__name__)
 class Methods(object):
     FIX: dict[str, Callable[[Response], Request | Iterable[Request] | None]] = field(default_factory=dict)
     REGEX: dict[str, Callable[[Response], Request | Iterable[Request] | None]] = field(default_factory=dict)
-
-
-class Spider(object):
-    def __init__(self):
-        self._methods = Methods()
-        self.config = Config()
-
-    def route(self, url: str, regex: bool = False):
-        def decorator(func: Callable[[Response], Request | Iterable[Request] | None]):
-            if regex:
-                self._methods.REGEX[url] = func
-            else:
-                self._methods.FIX[url] = func
-            return func
-
-        return decorator
-
-    def construct(self) -> 'MethodDict':
-        return MethodDict(self._methods)
 
 
 class MethodDict(object):
@@ -80,19 +61,38 @@ class MethodDict(object):
             raise TypeError(f'{method.__name__} return type error')
 
 
+class Spider(object):
+    def __init__(self):
+        self._methods: Methods = Methods()
+        self.config: Config = Config()
+
+    def route(self, url: str, regex: bool = False):
+        def decorator(func: Callable[[Response], Request | Iterable[Request] | None]):
+            if regex:
+                self._methods.REGEX[url] = func
+            else:
+                self._methods.FIX[url] = func
+            return func
+
+        return decorator
+
+    def construct(self) -> MethodDict:
+        return MethodDict(self._methods)
+
+
 class Handle(object):
     def __init__(self, client: Client[Request | None, Response | None], config: Config, counter: AsyncCounter, methods: MethodDict):
-        self.config = config.HANDLE
+        self.config: HandleConfig = config.HANDLE
 
-        self._channel = client
-        self._counter = counter
+        self._channel: Client[Request | None, Response | None] = client
+        self._counter: AsyncCounter = counter
 
-        self._methods =  methods
+        self._methods: MethodDict =  methods
 
     async def loop(self):
         init_requests = self.config.INIT_URL
         for request in init_requests:
-            self._channel.put(request)
+            await self._channel.put(request)
 
         while True:
             response: Response | None = await self._channel.get()
@@ -105,13 +105,11 @@ class Handle(object):
             requests: list[Request] = self.handle_response(response)
 
             logger.debug(f'add requests: {requests}')
-            if len(requests):
-                await self._counter.increment(len(requests))
+            await self.handle_number(requests)
 
             for request in requests:
-                self._channel.put(request)
+                self._channel.put_nowait(request)
 
-            await self._counter.decrement()
 
     def handle_response(self, response: Response) -> list[Request]:
         try:
@@ -122,6 +120,14 @@ class Handle(object):
             return requests
 
         return []
+
+    async def handle_number(self, requests: list[Request]):
+        number: int = len(requests)
+
+        if number:
+            await self._counter.increment(number)
+
+        await self._counter.decrement()
 
 
 if __name__ == '__main__':
