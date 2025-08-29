@@ -8,7 +8,7 @@ from logging import getLogger
 from httpx import Request, Response
 
 from frame.handle import Spider
-from database.model import Cache, Session
+from database.model import Cache, SessionFactory
 from database.data import CacheData, Season, DEFAULT_TZ
 
 
@@ -89,7 +89,7 @@ def handle_subject(response: Response):
 
     cache: Cache = cache_object.to_orm()
 
-    with Session() as session:
+    with SessionFactory() as session:
         session.add(cache)
         session.commit()
     logger.info(f'{cache_object.name} add successfully')
