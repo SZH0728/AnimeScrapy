@@ -5,8 +5,8 @@ USE anime;
 CREATE TABLE IF NOT EXISTS detail (
     `id` INT NOT NULL AUTO_INCREMENT,
 
-    `name` VARCHAR(32) NOT NULL,
-    `translation` VARCHAR(32),
+    `name` VARCHAR(64) NOT NULL,
+    `translation` VARCHAR(64),
     `all` JSON,
 
     `year` YEAR,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS detail (
     `web` TINYINT,
     `webId` INT,
 
-    `picture` VARCHAR(64),
+    `picture` VARCHAR(128),
 
     PRIMARY KEY (`id`),
     INDEX `index_year_season` (`year`, `season`)
@@ -57,8 +57,8 @@ CREATE TABLE IF NOT EXISTS web (
 CREATE TABLE IF NOT EXISTS cache(
     `id` INT NOT NULL AUTO_INCREMENT,
 
-    `name` VARCHAR(32),
-    `translation` VARCHAR(32),
+    `name` VARCHAR(64),
+    `translation` VARCHAR(64),
     `all` JSON,
 
     `year` YEAR,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS cache(
     `web` TINYINT,
     `webId` INT,
 
-    `picture` VARCHAR(64),
+    `picture` VARCHAR(128),
 
     PRIMARY KEY (`id`)
 );

@@ -1,11 +1,15 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: Sun
 
-from datetime import date
+from datetime import date as date_type
 from dataclasses import dataclass, field
 from enum import Enum
 
+from pytz import timezone
+
 from spider.model import Cache, Detail, Score, Web
+
+DEFAULT_TZ = timezone('Asia/Shanghai')
 
 
 class Season(Enum):
@@ -24,7 +28,7 @@ class DetailData:
     year: int | None = None
     season: Season | None = None
 
-    time: date | None = None
+    time: date_type | None = None
     tag: list[str] = field(default=list)
     description: str | None = None
 
@@ -59,7 +63,7 @@ class DetailData:
             translation=detail.translation,
             names=detail.all,
             year=detail.year,
-            season=detail.season,
+            season=detail.season.value,
             time=detail.time,
             tag=detail.tag,
             description=detail.description,
@@ -73,11 +77,11 @@ class DetailData:
 class ScoreData:
     detailId: int | None = None
 
-    detailScore: dict[int, tuple[float, int]] = field(default=None)
+    detailScore: dict[int, tuple[float, int]] = field(default=dict)
     score: float | None  = None
     vote: int | None = None
 
-    date: date | None = None
+    date: date_type | None = None
 
     id: int | None = None
 
@@ -144,13 +148,13 @@ class CacheData:
     year: int | None = None
     season: Season | None = None
 
-    time: date | None = None
+    time: date_type | None = None
     tag: list[str] = field(default=list)
     description: str | None = None
 
     score: float | None = None
     vote: int | None = None
-    date: date | None = None
+    date: date_type | None = None
 
     web: int | None = None
     webId: int | None = None
@@ -167,7 +171,7 @@ class CacheData:
             translation=self.translation,
             all=self.all_data,
             year=self.year,
-            season=self.season,
+            season=self.season.value,
             time=self.time,
             tag=self.tag,
             description=self.description,

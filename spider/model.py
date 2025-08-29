@@ -26,8 +26,8 @@ class Detail(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    name = Column(String(32), nullable=False)
-    translation = Column(String(32))
+    name = Column(String(64), nullable=False)
+    translation = Column(String(64))
     all = Column(JSON)
 
     year = Column(YEAR)
@@ -40,7 +40,7 @@ class Detail(Base):
     web = Column(TINYINT)
     webId = Column(Integer)
 
-    picture = Column(String(64))
+    picture = Column(String(128))
 
     __table_args__ = (
         Index('index_year_season', 'year', 'season'),
@@ -78,8 +78,8 @@ class Cache(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    name = Column(String(32))
-    translation = Column(String(32))
+    name = Column(String(64))
+    translation = Column(String(64))
     all = Column(JSON)
 
     year = Column(YEAR)
@@ -96,7 +96,7 @@ class Cache(Base):
     web = Column(TINYINT)
     webId = Column(Integer)
 
-    picture = Column(String(64))
+    picture = Column(String(128))
 
 
 if __name__ == '__main__':
