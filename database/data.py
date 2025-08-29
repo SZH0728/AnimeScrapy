@@ -7,7 +7,7 @@ from enum import Enum
 
 from pytz import timezone
 
-from spider.model import Cache, Detail, Score, Web
+from database.model import Cache, Detail, Score, Web
 
 DEFAULT_TZ = timezone('Asia/Shanghai')
 
@@ -40,7 +40,7 @@ class DetailData:
     id: int | None = None
 
     def to_orm(self) -> Detail:
-        from spider.model import Detail
+        from database.model import Detail
         return Detail(
             name=self.name,
             translation=self.translation,
@@ -86,7 +86,7 @@ class ScoreData:
     id: int | None = None
 
     def to_orm(self) -> Score:
-        from spider.model import Score
+        from database.model import Score
         return Score(
             id=self.id,
             detailId=self.detailId,
@@ -119,7 +119,7 @@ class WebData:
     id: int | None = None
 
     def to_orm(self) -> Web:
-        from spider.model import Web
+        from database.model import Web
         return Web(
             id=self.id,
             name=self.name,
@@ -164,7 +164,7 @@ class CacheData:
     id: int | None = None
 
     def to_orm(self) -> Cache:
-        from spider.model import Cache
+        from database.model import Cache
         return Cache(
             id=self.id,
             name=self.name,

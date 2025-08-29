@@ -74,6 +74,7 @@ class Requester(object):
                 response.raise_for_status()
             except HTTPError as e:
                 logger.warning(f'{request.url} failed because of {e}, retrying...', exc_info=True)
+                await sleep(self.config.DOWNLOAD_DELAY)
             else:
                 return  response
 
