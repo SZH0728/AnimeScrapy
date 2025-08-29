@@ -14,6 +14,8 @@ from datetime import datetime, tzinfo
 from time import sleep
 from threading import Thread
 
+from scheduler.every import Time, Every
+
 logger = getLogger(__name__)
 
 
