@@ -18,29 +18,29 @@ else:
 
 Base = declarative_base()
 Engine = create_engine(DB_URI, pool_pre_ping=True)
-Session = sessionmaker(bind=Engine, autoflush=False)
+SessionFactory = sessionmaker(bind=Engine, autoflush=False)
 
 
 class Detail(Base):
     __tablename__ = 'detail'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 主键ID，自增
 
-    name = Column(String(64), nullable=False)
-    translation = Column(String(64))
-    all = Column(JSON)
+    name = Column(String(64), nullable=False)  # 动画名称
+    translation = Column(String(64))  # 动画译名
+    all = Column(JSON)  # 所有名称组成的JSON字符串数组
 
-    year = Column(YEAR)
-    season = Column(Enum('spring', 'summer', 'autumn', 'winter'))
+    year = Column(YEAR)  # 发布年份
+    season = Column(Enum('spring', 'summer', 'autumn', 'winter'))  # 发布季节
 
-    time = Column(Date)
-    tag = Column(JSON)
-    description = Column(Text)
+    time = Column(Date)  # 发布日期
+    tag = Column(JSON)  # 标签信息，以JSON字符串数组格式存储
+    description = Column(Text)  # 动画描述信息
 
-    web = Column(TINYINT)
-    webId = Column(Integer)
+    web = Column(TINYINT)  # 来源网站ID
+    webId = Column(Integer)  # 在来源网站的ID
 
-    picture = Column(String(128))
+    picture = Column(String(128))  # 封面图片URL
 
     __table_args__ = (
         Index('index_year_season', 'year', 'season'),
@@ -50,53 +50,53 @@ class Detail(Base):
 class Score(Base):
     __tablename__ = 'score'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    detailId = Column(Integer)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 主键ID，自增
+    detailId = Column(Integer)  # 关联的Detail表ID
 
-    detailScore = Column(JSON)
-    score = Column(DECIMAL(4, 2))
-    vote = Column(Integer)
+    detailScore = Column(JSON)  # 详细评分信息，以JSON格式存储
+    score = Column(DECIMAL(4, 2))  # 总评分
+    vote = Column(Integer)  # 投票人数
 
-    date = Column(Date)
+    date = Column(Date)  # 评分日期
 
 
 class Web(Base):
     __tablename__ = 'web'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 主键ID，自增
 
-    name = Column(String(16))
-    host = Column(String(16))
+    name = Column(String(16))  # 网站名称
+    host = Column(String(16))  # 网站主机地址
 
-    format = Column(String(16))
+    format = Column(String(16))  # 网站URL格式
 
-    priority = Column(TINYINT)
+    priority = Column(TINYINT)  # 网站优先级
 
 
 class Cache(Base):
     __tablename__ = 'cache'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 主键ID，自增
 
-    name = Column(String(64))
-    translation = Column(String(64))
-    all = Column(JSON)
+    name = Column(String(64))  # 动画名称
+    translation = Column(String(64))  # 动画译名
+    all = Column(JSON)  # 所有相关信息的JSON格式存储
 
-    year = Column(YEAR)
-    season = Column(Enum('spring', 'summer', 'autumn', 'winter'))
+    year = Column(YEAR)  # 发布年份
+    season = Column(Enum('spring', 'summer', 'autumn', 'winter'))  # 发布季节
 
-    time = Column(Date)
-    tag = Column(JSON)
-    description = Column(Text)
+    time = Column(Date)  # 发布日期
+    tag = Column(JSON)  # 标签信息，以JSON格式存储
+    description = Column(Text)  # 动画描述信息
 
-    score = Column(DECIMAL(4, 2))
-    vote = Column(Integer)
-    date = Column(Date, nullable=False)
+    score = Column(DECIMAL(4, 2))  # 评分
+    vote = Column(Integer)  # 投票人数
+    date = Column(Date, nullable=False)  # 缓存日期
 
-    web = Column(TINYINT)
-    webId = Column(Integer)
+    web = Column(TINYINT)  # 来源网站ID
+    webId = Column(Integer)  # 在来源网站的ID
 
-    picture = Column(String(128))
+    picture = Column(String(128))  # 封面图片URL
 
 
 if __name__ == '__main__':

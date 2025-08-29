@@ -9,37 +9,39 @@ from pytz import timezone
 
 from database.model import Cache, Detail, Score, Web
 
-DEFAULT_TZ = timezone('Asia/Shanghai')
+DEFAULT_TZ = timezone('Asia/Shanghai')  # 默认时区设置为上海时区
 
 
 class Season(Enum):
-    SPRING = 'spring'
-    SUMMER = 'summer'
-    AUTUMN = 'autumn'
-    WINTER = 'winter'
+    SPRING = 'spring'   # 春季
+    SUMMER = 'summer'   # 夏季
+    AUTUMN = 'autumn'   # 秋季
+    WINTER = 'winter'   # 冬季
 
 
 @dataclass
 class DetailData:
-    name: str
-    translation: str | None = None
-    names: list[str] = field(default=list)
+    # 动画详细信息数据类
+    name: str                           # 动画名称
+    translation: str | None = None      # 动画译名
+    names: list[str] = field(default=list)  # 所有相关名称列表
 
-    year: int | None = None
-    season: Season | None = None
+    year: int | None = None             # 发布年份
+    season: Season | None = None        # 发布季节
 
-    time: date_type | None = None
-    tag: list[str] = field(default=list)
-    description: str | None = None
+    time: date_type | None = None       # 发布日期
+    tag: list[str] = field(default=list)  # 标签列表
+    description: str | None = None      # 动画描述
 
-    web: int | None = None
-    webId: int | None = None
+    web: int | None = None              # 来源网站ID
+    webId: int | None = None            # 在来源网站的ID
 
-    picture: str | None = None
+    picture: str | None = None          # 封面图片URL
 
-    id: int | None = None
+    id: int | None = None               # 主键ID
 
     def to_orm(self) -> Detail:
+        # 将DetailData对象转换为Detail ORM对象
         from database.model import Detail
         return Detail(
             name=self.name,
@@ -57,6 +59,7 @@ class DetailData:
 
     @classmethod
     def from_orm(cls, detail: Detail) -> 'DetailData':
+        # 从Detail ORM对象创建DetailData对象
         return cls(
             id=detail.id,
             name=detail.name,
@@ -75,17 +78,19 @@ class DetailData:
 
 @dataclass
 class ScoreData:
-    detailId: int | None = None
+    # 评分数据类
+    detailId: int | None = None         # 关联的Detail表ID
 
-    detailScore: dict[int, tuple[float, int]] = field(default=dict)
-    score: float | None  = None
-    vote: int | None = None
+    detailScore: dict[int, tuple[float, int]] = field(default=dict)  # 详细评分信息
+    score: float | None  = None         # 总评分
+    vote: int | None = None             # 总投票人数
 
-    date: date_type | None = None
+    date: date_type | None = None       # 评分日期
 
-    id: int | None = None
+    id: int | None = None               # 主键ID
 
     def to_orm(self) -> Score:
+        # 将ScoreData对象转换为Score ORM对象
         from database.model import Score
         return Score(
             id=self.id,
@@ -98,6 +103,7 @@ class ScoreData:
 
     @classmethod
     def from_orm(cls, score_: Score) -> 'ScoreData':
+        # 从Score ORM对象创建ScoreData对象
         return cls(
             id=score_.id,
             detailId=score_.detailId,
@@ -110,15 +116,17 @@ class ScoreData:
 
 @dataclass
 class WebData:
-    name: str | None = None
-    host: str | None = None
+    # 网站数据类
+    name: str | None = None             # 网站名称
+    host: str | None = None             # 网站主机地址
 
-    format: str | None = None
-    priority: int | None = None
+    format: str | None = None           # 网站数据格式
+    priority: int | None = None         # 网站优先级
 
-    id: int | None = None
+    id: int | None = None               # 主键ID
 
     def to_orm(self) -> Web:
+        # 将WebData对象转换为Web ORM对象
         from database.model import Web
         return Web(
             id=self.id,
@@ -130,6 +138,7 @@ class WebData:
 
     @classmethod
     def from_orm(cls, web: Web) -> 'WebData':
+        # 从Web ORM对象创建WebData对象
         return cls(
             id=web.id,
             name=web.name,
@@ -141,29 +150,31 @@ class WebData:
 
 @dataclass
 class CacheData:
-    name: str | None = None
-    translation: str | None = None
-    all_data: list[str] = field(default=list)
+    # 缓存数据类
+    name: str | None = None             # 动画名称
+    translation: str | None = None      # 动画译名
+    all_data: list[str] = field(default=list)  # 所有相关名称列表
 
-    year: int | None = None
-    season: Season | None = None
+    year: int | None = None             # 发布年份
+    season: Season | None = None        # 发布季节
 
-    time: date_type | None = None
-    tag: list[str] = field(default=list)
-    description: str | None = None
+    time: date_type | None = None       # 发布日期
+    tag: list[str] = field(default=list)  # 标签列表
+    description: str | None = None      # 动画描述
 
-    score: float | None = None
-    vote: int | None = None
-    date: date_type | None = None
+    score: float | None = None          # 评分
+    vote: int | None = None             # 投票人数
+    date: date_type | None = None       # 缓存日期
 
-    web: int | None = None
-    webId: int | None = None
+    web: int | None = None              # 来源网站ID
+    webId: int | None = None            # 在来源网站的ID
 
-    picture: str | None = None
+    picture: str | None = None          # 封面图片URL
 
-    id: int | None = None
+    id: int | None = None               # 主键ID
 
     def to_orm(self) -> Cache:
+        # 将CacheData对象转换为Cache ORM对象
         from database.model import Cache
         return Cache(
             id=self.id,
@@ -185,6 +196,7 @@ class CacheData:
 
     @classmethod
     def from_orm(cls, cache: Cache) -> 'CacheData':
+        # 从Cache ORM对象创建CacheData对象
         return cls(
             id=cache.id,
             name=cache.name,
