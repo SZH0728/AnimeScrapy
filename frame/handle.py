@@ -162,7 +162,7 @@ class Handle(object):
         @brief 主循环处理函数
         @details 持续从通道获取响应，处理后将新请求放回通道，直到收到关闭信号
         """
-        init_requests = self.config.INIT_URL
+        init_requests = self.config.INIT_URLS
         for request in init_requests:
             await self._channel.put(request)
 

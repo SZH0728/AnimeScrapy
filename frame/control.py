@@ -38,7 +38,10 @@ class Manager(object):
         self.spider: Spider = spider
         methods: MethodDict = spider.construct()
 
-        self.counter = AsyncCounter(len(self.spider.config.HANDLE.INIT_URL))
+        if self.spider.config.HANDLE.INIT_URL:
+            self.spider.config.HANDLE.INIT_URLS.append(self.spider.config.HANDLE.INIT_URL)
+
+        self.counter = AsyncCounter(len(self.spider.config.HANDLE.INIT_URLS))
 
         self.handle = Handle(self.bridge.A, self.spider.config, self.counter, methods)
         self.request = Requester(self.bridge.B, self.spider.config)

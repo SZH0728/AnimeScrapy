@@ -45,7 +45,7 @@ class Requester(object):
         user_agent: dict[str, str] = self.config.DEFAULT_REQUEST_HEADERS
         user_agent['user-agent'] = self.config.USER_AGENT
 
-        async with AsyncClient(headers=user_agent, timeout=self.config.DOWNLOAD_DELAY) as client:
+        async with AsyncClient(headers=user_agent, timeout=self.config.MAX_DELAY, follow_redirects=True) as client:
             while True:
                 request: Request | None = await self._channel.get()
 

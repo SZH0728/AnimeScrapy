@@ -15,7 +15,7 @@ logging.getLogger('httpcore').setLevel(logging.WARNING)
 logging.getLogger('httpx').setLevel(logging.WARNING)
 
 spider = Spider()
-spider.config.HANDLE.INIT_URL = [Request('GET', 'http://127.0.0.1:5000/')]
+spider.config.HANDLE.INIT_URLS = [Request('GET', 'http://127.0.0.1:5000/')]
 
 
 @spider.route('127.0.0.1/')

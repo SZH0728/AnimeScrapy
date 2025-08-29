@@ -29,9 +29,12 @@ class RequestConfig(object):
 @dataclass
 class HandleConfig(object):
     """处理器配置类，用于配置数据处理相关参数"""
+
+    # 初始URL，程序启动时需要处理的请求
+    INIT_URL: Request | None = None
     
     # 初始URL列表，程序启动时需要处理的请求列表
-    INIT_URL: list[Request] = field(default_factory=list)
+    INIT_URLS: list[Request] = field(default_factory=list)
 
 
 @dataclass
@@ -39,10 +42,10 @@ class Config(object):
     """主配置类，整合所有配置项"""
     
     # 请求配置实例
-    REQUEST = RequestConfig()
+    REQUEST: RequestConfig = field(default_factory=RequestConfig)
     
     # 处理器配置实例
-    HANDLE = HandleConfig()
+    HANDLE: HandleConfig = field(default_factory=HandleConfig)
 
 
 if __name__ == '__main__':
