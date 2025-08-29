@@ -82,6 +82,7 @@ class Manager(object):
 
             await self.bridge.stop()
 
+            logger.debug('send stop signal, wait for tasks to complete')
             await gather(handle_task, request_task)
         except Exception as e:
             logger.error(f'An error occurred: {e}', exc_info=True)

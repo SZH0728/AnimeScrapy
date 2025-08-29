@@ -27,7 +27,6 @@ def handle_index(response: Response):
 @spider.route(r'127.0.0.1/\d+', regex=True)
 def handle_number(response: Response):
     print(response.text)
-    return 123
 
 
 control = Control()
