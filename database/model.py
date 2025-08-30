@@ -12,6 +12,7 @@ DB_URI: str = ''
 if name == 'nt':
     DB_URI = f'mariadb+pymysql://root:123456@localhost:3306/anime'
 elif name == 'posix':
+    # TODO: environment variable
     DB_URI = f'mariadb+pymysql://{getenv("USERNAME")}:{getenv("PASSWORD")}@{getenv("HOST")}:{getenv("PORT")}/anime'
 else:
     raise Exception('Unknown OS')
