@@ -66,7 +66,13 @@ class Schedule(object):
 
         functions: list[Callable] = []
         for time, func in self._jobs:
-            if hour in time.hour and weekday in time.weekday and monthday in time.monthday and month in time.month:
+            conditions: tuple[bool, ...] = (
+                hour in time.hour if time.hour else True,
+                weekday in time.weekday if time.weekday else True,
+                monthday in time.monthday if time.monthday else True,
+                month in time.month if time.month else True
+            )
+            if all(conditions):
                 functions.append(func)
 
         return functions
@@ -152,4 +158,13 @@ class Schedule(object):
 
 
 if __name__ == '__main__':
-    pass
+    from pytz import timezone as time_zone
+    tz: tzinfo = time_zone('Asia/Shanghai')
+
+    schedule = Schedule(tz)
+
+    @schedule.repeat(Every())
+    def hello():
+        print('hello world')
+
+    schedule.loop(RunType.BLOCK)

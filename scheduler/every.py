@@ -16,10 +16,10 @@ class Time(object):
     @brief 时间配置类
     @details 用于存储任务执行的时间规则配置
     """
-    hour: tuple[int, ...] = field(default=tuple)        #: 小时配置 (0-23)
-    weekday: tuple[int, ...] = field(default=tuple)     #: 星期配置 (1-7, 1为周一)
-    monthday: tuple[int, ...] = field(default=tuple)    #: 日期配置 (1-31)
-    month: tuple[int, ...] = field(default=tuple)       #: 月份配置 (1-12)
+    hour: tuple[int, ...] = field(default=tuple())        #: 小时配置 (0-23)
+    weekday: tuple[int, ...] = field(default=tuple())     #: 星期配置 (1-7, 1为周一)
+    monthday: tuple[int, ...] = field(default=tuple())    #: 日期配置 (1-31)
+    month: tuple[int, ...] = field(default=tuple())       #: 月份配置 (1-12)
 
 
 class Every(object):
