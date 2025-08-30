@@ -118,6 +118,7 @@ class Client[T, S]:
                 break
             await sleep(1)
         else:
+            logger.warning('Queue has no message for too long, return None')
             return None
 
         try:

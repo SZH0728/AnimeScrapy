@@ -44,7 +44,7 @@ class Manager(object):
         self.counter = AsyncCounter(len(self.spider.config.HANDLE.INIT_URLS))
 
         self.handle = Handle(self.bridge.A, self.spider.config, self.counter, methods)
-        self.request = Requester(self.bridge.B, self.spider.config)
+        self.request = Requester(self.bridge.B, self.spider.config, self.counter)
 
     def loop(self):
         """!

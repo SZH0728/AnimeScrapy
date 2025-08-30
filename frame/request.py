@@ -14,6 +14,7 @@ from httpx import Request, Response, AsyncClient, HTTPError
 
 from frame.bridge import Client
 from frame.config import Config, RequestConfig
+from frame.counter import AsyncCounter
 
 logger = getLogger(__name__)
 
@@ -25,7 +26,7 @@ class Requester(object):
     该类封装了异步HTTP请求的处理逻辑，包括请求重试、错误处理和响应处理等功能
     """
     
-    def __init__(self, client: Client[Response | None, Request | None], config: Config):
+    def __init__(self, client: Client[Response | None, Request | None], config: Config, counter: AsyncCounter):
         """
         @brief 初始化Requester实例
         
@@ -34,6 +35,7 @@ class Requester(object):
         """
         self.config: RequestConfig = config.REQUEST
         self._channel: Client[Response | None, Request | None] = client
+        self._counter: AsyncCounter = counter
 
     async def loop(self):
         """
@@ -90,6 +92,7 @@ class Requester(object):
         """
         if response is None:
             logger.error(f'{url} failed to the maximum number of retries')
+            await self._counter.decrement()
         elif isinstance(response, Response):
             logger.debug(f'{url} succeeded')
             await self._channel.put(response)

@@ -210,6 +210,9 @@ class Handle(object):
 
         await self._counter.decrement()
 
+        left: int = await self._counter.value()
+        logger.info(f'{left} webpage left to handle')
+
 
 if __name__ == '__main__':
     pass
