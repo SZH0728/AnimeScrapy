@@ -12,7 +12,13 @@ class RequestConfig(object):
     USER_AGENT: str = ''
 
     # 默认请求头字典，可以添加通用的请求头信息
-    DEFAULT_REQUEST_HEADERS: dict[str, str] = field(default_factory=dict)
+    DEFAULT_REQUEST_HEADERS: dict[str, str] = field(default_factory=lambda: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Cache-Control': 'max-age=0'
+    } )
 
     # 并发请求数量，同时发起的请求数上限
     CONCURRENT_REQUESTS: int = 32
