@@ -192,7 +192,7 @@ class Handle(object):
         try:
             requests: list[Request] = self._methods.handle(response)
         except Exception as e:
-            logger.error(f'Error occur when handle response: {e}', exc_info=True)
+            logger.error(f'Error occur when handle response {response.url}: {e}', exc_info=True)
         else:
             return requests
 

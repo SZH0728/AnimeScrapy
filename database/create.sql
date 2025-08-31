@@ -5,8 +5,8 @@ USE anime;
 CREATE TABLE IF NOT EXISTS detail (
     `id` INT NOT NULL AUTO_INCREMENT,
 
-    `name` VARCHAR(64) NOT NULL,
-    `translation` VARCHAR(64),
+    `name` VARCHAR(128) NOT NULL,
+    `translation` VARCHAR(128),
     `all` JSON,
 
     `year` YEAR,
@@ -57,8 +57,8 @@ CREATE TABLE IF NOT EXISTS web (
 CREATE TABLE IF NOT EXISTS cache(
     `id` INT NOT NULL AUTO_INCREMENT,
 
-    `name` VARCHAR(64),
-    `translation` VARCHAR(64),
+    `name` VARCHAR(128),
+    `translation` VARCHAR(128),
     `all` JSON,
 
     `year` YEAR,

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: Sun
 
+from typing import Callable, Iterable
 from dataclasses import dataclass, field
 
 from httpx import Request
@@ -35,6 +36,9 @@ class HandleConfig(object):
     
     # 初始URL列表，程序启动时需要处理的请求列表
     INIT_URLS: list[Request] = field(default_factory=list)
+
+    # 初始URL处理函数，返回一个请求列表
+    INIT_URL_FUNCTION: Callable[[], Iterable[Request]] | None = None
 
 
 @dataclass

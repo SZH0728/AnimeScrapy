@@ -70,12 +70,18 @@ class Requester(object):
         @param client 用于发送请求的异步HTTP客户端
         @return Response|None 成功时返回响应对象，失败时返回None
         """
+        for key, value in self.config.DEFAULT_REQUEST_HEADERS.items():
+            if key in request.headers:
+                continue
+
+            request.headers[key] = value
+
         for i in range(self.config.MAX_RETRY):
             try:
                 response: Response = await client.send(request)
                 response.raise_for_status()
             except HTTPError as e:
-                logger.warning(f'{request.url} failed because of {e}, retrying...', exc_info=True)
+                logger.warning(f'{request.url} failed because of {e}, retrying...')
                 await sleep(self.config.DOWNLOAD_DELAY)
             else:
                 return  response
