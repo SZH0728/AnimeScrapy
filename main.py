@@ -25,7 +25,12 @@ console = logging.StreamHandler()
 console.setLevel(logging.DEBUG)
 console.setFormatter(formatter)
 
-file = logging.FileHandler('log.txt', encoding='utf-8')
+if name == 'nt':
+    file = logging.FileHandler('log.txt', encoding='utf-8')
+elif name == 'posix':
+    file = logging.FileHandler(getenv('LOG_PATH'), encoding='utf-8')
+else:
+    raise Exception('Unknown OS')
 file.setLevel(logging.WARNING)
 file.setFormatter(formatter)
 
@@ -55,6 +60,8 @@ def task():
     elif name == 'posix':
         # TODO: environment variable
         config.SAVE.DEFAULT_PATH = getenv('PICTURE_PATH')
+    else:
+        raise Exception('Unknown OS')
 
     picture_control: PictureControl = PictureControl(config)
     picture_control.add_tasks([Task(url=url, name=uid) for uid, url in pictures])
@@ -62,4 +69,7 @@ def task():
 
 if __name__ == '__main__':
     # schedule.loop(RunType.BLOCK)
+    from time import sleep
+
     task()
+    sleep(3600)

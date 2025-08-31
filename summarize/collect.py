@@ -6,6 +6,7 @@ from json import dumps
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from database.model import Cache, Detail, Score, SessionFactory
 from summarize.priority import WebPriority
@@ -97,7 +98,8 @@ class Collect(object):
         """
         score: Score = session.query(Score).filter(Score.detailId == detail.id).first()  # type: ignore
 
-        score.detailScore[cache.webId] = [float(cache.score), cache.vote]
+        score.detailScore[str(cache.web)] = [float(cache.score), cache.vote]
+        flag_modified(score, 'detailScore')
         score.vote = 0
 
         summarize: float = 0

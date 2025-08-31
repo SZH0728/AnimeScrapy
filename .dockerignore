@@ -1,0 +1,16 @@
+# Ignore all files in .git/
+.git/
+
+# Ignore all files in .idea/
+.idea/
+
+# Ignore all files in .venv/
+.venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+log.txt
+.gitignore
