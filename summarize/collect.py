@@ -79,8 +79,8 @@ class Collect(object):
 
             #TODO: 当构建项目时，记得启用删除缓存数据
 
-            # session.delete(cache)
-            # session.commit()
+            session.delete(cache)
+            session.commit()
 
         return pictures
 
