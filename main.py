@@ -68,8 +68,10 @@ def task():
     picture_control.main()
 
 if __name__ == '__main__':
-    # schedule.loop(RunType.BLOCK)
-    from time import sleep
+    #TODO: 切换调试与部署模式
 
-    task()
-    sleep(3600)
+    schedule.loop(RunType.BLOCK)
+    # from time import sleep
+    #
+    # task()
+    # sleep(3600)

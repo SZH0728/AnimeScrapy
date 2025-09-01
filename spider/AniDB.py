@@ -44,7 +44,8 @@ AniDBSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = {
 }
 AniDBSpider.config.REQUEST.DOWNLOAD_DELAY = 5
 
-AniDBSpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/season/?do=calendar&h=1&view=smallgrid')
+# AniDBSpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/season/?do=calendar&h=1&view=smallgrid')
+AniDBSpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/18324')
 
 @AniDBSpider.route('anidb.net/anime/season/')
 def handle_season(response: Response)  -> list[Request]:
@@ -57,7 +58,7 @@ def handle_season(response: Response)  -> list[Request]:
     return [Request('GET', 'https://anidb.net' + url) for url in following]
 
 
-@AniDBSpider.route('anidb.net/anime/\d+', regex=True)
+@AniDBSpider.route(r'anidb.net/anime/\d+', regex=True)
 def handle_detail(response: Response):
     cache_object: CacheData = CacheData()
 
