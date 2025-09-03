@@ -30,7 +30,7 @@ BagumiSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = headers = {
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
 }
-BagumiSpider.config.REQUEST.DOWNLOAD_DELAY = 5
+BagumiSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 BagumiSpider.config.HANDLE.INIT_URL = Request('GET', 'https://api.bgm.tv/calendar')
 

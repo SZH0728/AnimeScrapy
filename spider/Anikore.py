@@ -36,7 +36,7 @@ AnikoreSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = {
     'sec-ch-ua-platform': '"Windows"',
 }
 
-AnikoreSpider.config.REQUEST.DOWNLOAD_DELAY = 5
+AnikoreSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 
 def init_request() -> list[Request]:

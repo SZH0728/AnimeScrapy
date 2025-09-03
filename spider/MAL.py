@@ -34,7 +34,7 @@ MALSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = headers = {
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
 }
-MALSpider.config.REQUEST.DOWNLOAD_DELAY = 5
+MALSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 MALSpider.config.HANDLE.INIT_URL = Request('GET', 'https://myanimelist.net/anime/season')
 

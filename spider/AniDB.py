@@ -42,7 +42,7 @@ AniDBSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = {
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
 }
-AniDBSpider.config.REQUEST.DOWNLOAD_DELAY = 5
+AniDBSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 # AniDBSpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/season/?do=calendar&h=1&view=smallgrid')
 AniDBSpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/18324')
