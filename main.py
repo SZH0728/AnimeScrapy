@@ -14,7 +14,7 @@ from constant import LOG_PATH, PICTURE_PATH
 
 from spider.Bagumi import BagumiSpider
 from spider.MAL import MALSpider
-from spider.AniDB import AniDBSpider
+from spider.AniDB_API import AniDBAPISpider
 from spider.Anikore import AnikoreSpider
 
 tz = timezone('Asia/Shanghai')
@@ -41,7 +41,7 @@ def task():
 
     spider_control.add(BagumiSpider)
     spider_control.add(MALSpider)
-    # spider_control.add(AniDBSpider)
+    spider_control.add(AniDBAPISpider)
     spider_control.add(AnikoreSpider)
 
     spider_control.start()
