@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: Sun
 
-from os import name, getenv
 import logging
 
 from pytz import timezone
@@ -40,10 +39,10 @@ logging.getLogger('httpx').setLevel(logging.WARNING)
 def task():
     spider_control: SpiderControl = SpiderControl()
 
-    # spider_control.add(BagumiSpider)
-    # spider_control.add(MALSpider)
+    spider_control.add(BagumiSpider)
+    spider_control.add(MALSpider)
     # spider_control.add(AniDBSpider)
-    # spider_control.add(AnikoreSpider)
+    spider_control.add(AnikoreSpider)
 
     spider_control.start()
 
