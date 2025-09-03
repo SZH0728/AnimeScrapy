@@ -78,8 +78,6 @@ class Collect(object):
                 logger.debug(f'detail {cache.name} exists, update detail')
                 self.update_score(cache, detail, session)
 
-            #TODO: 当构建项目时，记得启用删除缓存数据
-
             session.delete(cache)
             session.commit()
 

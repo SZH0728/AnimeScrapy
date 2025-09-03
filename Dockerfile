@@ -1,6 +1,7 @@
-# docker build -t anime_scrapy:1.0.4 .
+# docker build -t anime_scrapy:verson .
 # docker save -o anime_scrapy.tar anime_scrapy
 # docker load -i anime_scrapy.tar
+
 FROM python:3.13-alpine
 
 WORKDIR /usr/src/app

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    image: anime_scrapy:latest
+    container_name: anime_scrapy
+    depends_on:
+      - database
+    environment:
+      - USERNAME=your_user_name
+      - PASSWORD=your_password
+      - HOST=database
+      - PORT=3306
+      - PICTURE_PATH=your_picture_path
+      - LOG_PATH=your_log_path
+    networks:
+      - anime_scrapy_network
+    restart: unless-stopped
+
+  database:
+    image: mariadb:latest
+    container_name: database
+    environment:
+      - MARIADB_ROOT_PASSWORD=your_password
+      - MARIADB_DATABASE=anime_scrapy
+      - MARIADB_USER=your_user_name
+      - MARIADB_PASSWORD=your_password
+    volumes:
+      - ./database/create.sql:/docker-entrypoint-initdb.d/create.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - anime_scrapy_network
+    restart: unless-stopped
+
+networks:
+  anime_scrapy_network:
+    driver: bridge

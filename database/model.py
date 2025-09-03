@@ -1,22 +1,15 @@
 # -*- coding:utf-8 -*-
 # AUTHOR: Sun
 
-from os import name, getenv
-
 from sqlalchemy import create_engine, Index
 from sqlalchemy import Column, Integer, String, Text, Date, JSON, Enum, DECIMAL
 from sqlalchemy.dialects.mysql import TINYINT, YEAR
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DB_URI: str = ''
-if name == 'nt':
-    DB_URI = f'mariadb+pymysql://root:123456@localhost:3306/anime'
-elif name == 'posix':
-    # TODO: environment variable
-    DB_URI = f'mariadb+pymysql://{getenv("USERNAME")}:{getenv("PASSWORD")}@{getenv("HOST")}:{getenv("PORT")}/anime'
-else:
-    raise Exception('Unknown OS')
+from constant import USERNAME, PASSWORD, HOST, PORT
 
+
+DB_URI: str = f'mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/anime'
 Base = declarative_base()
 Engine = create_engine(DB_URI, pool_pre_ping=True)
 SessionFactory = sessionmaker(bind=Engine, autoflush=False)
