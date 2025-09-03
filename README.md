@@ -1,5 +1,9 @@
 # AnimeScrapy - 动画信息爬虫项目
 
+<div align="right">
+  <a href="./README.md">中文</a> | <a href="./README_en.md">English</a>
+</div>
+
 AnimeScrapy 是一个基于 Scrapy 框架的多源动画信息采集系统，可以从多个动画数据库网站收集动画信息，包括番剧名称、评分、演员、导演、标签等详细信息，并将这些信息存储到数据库中。  
 ### 本项目已停止维护。重构版本将发布于[AnimeScrapyV2](https://github.com/SZH0728/AnimeScrapyV2)
 
