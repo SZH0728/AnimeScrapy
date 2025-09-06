@@ -76,10 +76,12 @@ class Collect(object):
                 pictures.append((str(detail.id), detail.picture))
             else:
                 logger.debug(f'detail {cache.name} exists, update detail')
+                detail.all = list(set(detail.all + cache.all))
                 self.update_score(cache, detail, session)
 
             session.delete(cache)
-            session.commit()
+
+        session.commit()
 
         return pictures
 
@@ -94,7 +96,7 @@ class Collect(object):
         @param detail 详细信息对象
         @param session 数据库会话对象
         """
-        score: Score = session.query(Score).filter(Score.detailId == detail.id).first()  # type: ignore
+        score: Score = session.query(Score).filter(Score.detailId == detail.id, Score.date == cache.date).first()  # type: ignore
 
         score.detailScore[str(cache.web)] = [float(cache.score), cache.vote]
         flag_modified(score, 'detailScore')
@@ -106,8 +108,6 @@ class Collect(object):
             summarize += i[0] * i[1]
         score.score = summarize / score.vote if score.vote else 0
 
-        session.commit()
-
     def create_score(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
         """
         @brief 为新的动漫条目创建详细信息和评分记录
@@ -118,11 +118,6 @@ class Collect(object):
         @retval tuple[Detail, Score] 包含详细信息对象和评分对象的元组
         """
         detail, score = self.split_cache_to_detail_and_score(cache, session)
-
-        session.add(score)
-
-        session.commit()
-
         return detail, score
 
     @staticmethod
@@ -161,6 +156,8 @@ class Collect(object):
             vote=cache.vote,
             date=cache.date
         )
+
+        session.add(score)
 
         return detail, score
 
