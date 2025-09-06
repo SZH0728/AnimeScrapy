@@ -14,7 +14,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 
-QUEUE_MAX_WAIT_TIME = 120
+QUEUE_MAX_WAIT_TIME = 300 * 10
 
 class Bridge[T, S]:
     """

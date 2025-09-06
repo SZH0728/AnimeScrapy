@@ -12,7 +12,7 @@ from asyncio import sleep
 
 from httpx import Request, Response, AsyncClient, HTTPError
 
-from frame.bridge import Client
+from frame.bridge import Client, QUEUE_MAX_WAIT_TIME
 from frame.config import Config, RequestConfig
 from frame.counter import AsyncCounter
 
@@ -36,6 +36,9 @@ class Requester(object):
         self.config: RequestConfig = config.REQUEST
         self._channel: Client[Response | None, Request | None] = client
         self._counter: AsyncCounter = counter
+
+        if self.config.DOWNLOAD_DELAY * 5 > QUEUE_MAX_WAIT_TIME:
+            logger.warning(f'{QUEUE_MAX_WAIT_TIME = } is too short, it may cause the handle coroutine stop automatically')
 
     async def loop(self):
         """
