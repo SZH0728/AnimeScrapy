@@ -2,7 +2,6 @@
 # AUTHOR: Sun
 
 import logging
-
 from pytz import timezone
 
 from frame.control import Control as SpiderControl

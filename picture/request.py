@@ -140,7 +140,7 @@ class Requester(object):
                 response: Response = await client.get(task.url)
                 response.raise_for_status()
             except HTTPError as e:
-                logger.warning(f'{task.url} failed because of {e}, retrying...', exc_info=True)
+                logger.warning(f'{task.url} failed because of {e}, retrying...')
             else:
                 return response
 
