@@ -34,9 +34,10 @@ AniDBAPISpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = {
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
 }
-AniDBAPISpider.config.REQUEST.DOWNLOAD_DELAY = 5
+AniDBAPISpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 AniDBAPISpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/season/?do=calendar&h=1&view=smallgrid')
+
 
 @AniDBAPISpider.route('anidb.net/anime/season/')
 def handle_season(response: Response)  -> list[Request]:
@@ -116,7 +117,8 @@ def handle_detail(response: Response):
     cache_object.web = 3
     cache_object.webId = ANIME_QUERY_ID_PATTERN.search(response.url.query.decode('utf-8')).group(1)
 
-    cache_object.picture = f'https://cdn-eu.anidb.net/images/main/{cache_object.webId}.jpg'
+    picture = root.xpath(r'./picture')[0].text.strip()
+    cache_object.picture = f'https://cdn-eu.anidb.net/images/main/{picture}'
 
     cache: Cache = cache_object.to_orm()
 
