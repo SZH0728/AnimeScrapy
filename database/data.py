@@ -175,7 +175,6 @@ class CacheData:
 
     def to_orm(self) -> Cache:
         # 将CacheData对象转换为Cache ORM对象
-        from database.model import Cache
         return Cache(
             id=self.id,
             name=self.name,
