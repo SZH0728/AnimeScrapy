@@ -7,7 +7,7 @@
 @details 爬虫控制器模块，负责启动多个爬虫实例并等待它们完成
 """
 
-from typing import Iterable
+from typing import Iterable, Sized
 from threading import Thread
 from asyncio import gather, run, sleep, create_task
 from logging import getLogger
@@ -41,14 +41,22 @@ class Manager(object):
         self.spider: Spider = spider
         methods: MethodDict = spider.construct()
 
+        init_url_count: int = len(self.spider.config.HANDLE.INIT_URLS)
+
         if self.spider.config.HANDLE.INIT_URL:
-            self.spider.config.HANDLE.INIT_URLS.append(self.spider.config.HANDLE.INIT_URL)
+            init_url_count += 1
 
         if self.spider.config.HANDLE.INIT_URL_FUNCTION:
             requests: Iterable[Request] = self.spider.config.HANDLE.INIT_URL_FUNCTION()
-            self.spider.config.HANDLE.INIT_URLS.extend(requests)
 
-        self.counter = AsyncCounter(len(self.spider.config.HANDLE.INIT_URLS))
+            if isinstance(requests, Sized):
+                init_url_count += len(requests)
+
+            else:
+                for _ in requests:
+                    init_url_count += 1
+
+        self.counter = AsyncCounter(init_url_count)
 
         self.handle = Handle(self.bridge.A, self.spider.config, self.counter, methods)
         self.request = Requester(self.bridge.B, self.spider.config, self.counter)

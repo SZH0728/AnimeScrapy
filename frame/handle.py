@@ -162,7 +162,30 @@ class Handle(object):
         @brief 主循环处理函数
         @details 持续从通道获取响应，处理后将新请求放回通道，直到收到关闭信号
         """
-        init_requests = self.config.INIT_URLS
+        init_urls: list[Request | str] = []
+
+        if self.config.INIT_URL:
+            init_urls.append(self.config.INIT_URL)
+
+        if self.config.INIT_URLS:
+            init_urls.extend(self.config.INIT_URLS)
+
+        if self.config.INIT_URL_FUNCTION:
+            urls = self.config.INIT_URL_FUNCTION()
+            init_urls.extend(urls)
+
+        init_requests: list[Request] = []
+        for i in init_urls:
+            if isinstance(i, str):
+                init_requests.append(Request('GET', i))
+                continue
+
+            if isinstance(i, Request):
+                init_requests.append(i)
+                continue
+
+            raise TypeError(f'{i} is not a valid request')
+
         for request in init_requests:
             await self._channel.put(request)
 
