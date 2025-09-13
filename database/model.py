@@ -110,6 +110,10 @@ class Cache(Base):
 
     picture = Column(String(128))  # 封面图片URL
 
+    __table_args__ = (
+        Index('idx_cache_web', 'web'),
+    )
+
 
 if __name__ == '__main__':
     pass
