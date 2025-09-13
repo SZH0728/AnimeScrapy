@@ -66,38 +66,47 @@ class Collect(object):
 
         pictures: list[tuple[str, str]] = []
         for cache in caches:
+            session.commit()
+            session.delete(cache)
+
             detail: Detail | None = session.query(Detail).filter(
                 func.json_overlaps(Detail.all, dumps([i for i in cache.all if i]))
             ).first()
 
             if detail is None:
                 logger.debug(f'detail {cache.name} is None, create detail')
-                detail, _ = self.create_score(cache, session)
+                detail, _ = self.create_detail(cache, session)
                 pictures.append((str(detail.id), detail.picture))
-            else:
-                logger.debug(f'detail {cache.name} exists, update detail')
-                detail.all = list(set(detail.all + cache.all))
-                self.update_score(cache, detail, session)
+                continue
 
-            session.delete(cache)
+            logger.debug(f'detail {cache.name} exists, update detail')
+            detail.all = list(set(detail.all + cache.all))
+            flag_modified(detail, 'all')
+
+            score: Score = session.query(Score).filter(Score.detailId == detail.id, Score.date == cache.date).first()  # type: ignore
+
+            if score is None:
+                logger.debug(f'score {detail.id} is None, create score')
+                self.create_score(cache, detail, session)
+                continue
+
+            logger.debug(f'score {detail.id} exists, update score')
+            self.update_score(cache, score)
 
         session.commit()
 
         return pictures
 
     @staticmethod
-    def update_score(cache: Cache, detail: Detail, session: Session):
+    def update_score(cache: Cache, score: Score):
         """
         @brief 更新已存在的动漫条目的评分信息
 
         根据缓存中的数据更新评分表中的详细评分和总评分
 
         @param cache 缓存数据对象
-        @param detail 详细信息对象
-        @param session 数据库会话对象
+        @param score 评分对象
         """
-        score: Score = session.query(Score).filter(Score.detailId == detail.id, Score.date == cache.date).first()  # type: ignore
-
         score.detailScore[str(cache.web)] = [float(cache.score), cache.vote]
         flag_modified(score, 'detailScore')
         score.vote = 0
@@ -108,7 +117,7 @@ class Collect(object):
             summarize += i[0] * i[1]
         score.score = summarize / score.vote if score.vote else 0
 
-    def create_score(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
+    def create_detail(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
         """
         @brief 为新的动漫条目创建详细信息和评分记录
 
@@ -121,7 +130,33 @@ class Collect(object):
         return detail, score
 
     @staticmethod
-    def split_cache_to_detail_and_score(cache: Cache, session: Session) -> tuple[Detail, Score]:
+    def create_score(cache: Cache, detail: Detail, session: Session) -> Score:
+        """
+        @brief 创建一个新的评分记录
+
+        根据缓存数据为指定的详细信息条目创建一个新的评分对象，并将其添加到数据库会话中。
+        评分信息包括详细评分（按网站区分）、总评分、投票数和日期。
+
+        @param cache 缓存对象，包含从网站获取的原始评分数据
+        @param detail 详细信息对象，与新创建的评分相关联
+        @param session 数据库会话对象，用于添加新的评分记录
+
+        @return 返回新创建的评分对象
+        @retval Score 新创建的评分对象
+        """
+        score = Score(
+            detailScore={cache.web: [float(cache.score), cache.vote]},
+            detailId=detail.id,
+            score=cache.score,
+            vote=cache.vote,
+            date=cache.date
+        )
+
+        session.add(score)
+
+        return score
+
+    def split_cache_to_detail_and_score(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
         """
         @brief 将缓存数据分割为详细信息和评分两个对象
 
@@ -149,15 +184,7 @@ class Collect(object):
         session.flush()
 
         # 创建Score对象并填充相应字段
-        score = Score(
-            detailScore={cache.web: [float(cache.score), cache.vote]},
-            detailId=detail.id,
-            score=cache.score,
-            vote=cache.vote,
-            date=cache.date
-        )
-
-        session.add(score)
+        score = self.create_score(cache, detail, session)
 
         return detail, score
 
