@@ -41,7 +41,7 @@ def task():
     spider_control.add(BagumiSpider)
     spider_control.add(MALSpider)
     spider_control.add(AniDBAPISpider)
-    spider_control.add(AnikoreSpider)
+    # spider_control.add(AnikoreSpider)
 
     spider_control.start()
 
