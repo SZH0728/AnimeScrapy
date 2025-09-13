@@ -53,6 +53,12 @@ class Score(Base):
 
     date = Column(Date)  # 评分日期
 
+    __table_args__ = (
+        Index('idx_score_detail_date', 'detailId', 'date'),
+        Index('idx_score_date', 'date'),
+        Index('idx_score_rank', 'score', 'vote'),
+    )
+
 
 class Web(Base):
     __tablename__ = 'web'
@@ -65,6 +71,18 @@ class Web(Base):
     format = Column(String(16))  # 网站URL格式
 
     priority = Column(TINYINT)  # 网站优先级
+
+
+class NameMap(Base):
+    __tablename__ = 'name_map'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)  # 主键ID，自增
+    name = Column(String(64), nullable=False, unique=True)  # 动画名称，唯一
+    detailId = Column(Integer, nullable=False)  # 关联的Detail表ID
+
+    __table_args__ = (
+        Index('index_name', 'name'),
+    )
 
 
 class Cache(Base):

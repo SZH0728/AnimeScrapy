@@ -2,13 +2,12 @@
 # AUTHOR: Sun
 
 from logging import getLogger
-from json import dumps
+from typing import Iterable
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from database.model import Cache, Detail, Score, SessionFactory
+from database.model import Cache, Detail, Score, NameMap, SessionFactory
 from summarize.priority import WebPriority
 
 logger = getLogger(__name__)
@@ -69,18 +68,22 @@ class Collect(object):
             session.commit()
             session.delete(cache)
 
-            detail: Detail | None = session.query(Detail).filter(
-                func.json_overlaps(Detail.all, dumps([i for i in cache.all if i]))
+            detail: Detail | None = session.query(Detail).join(
+                NameMap, Detail.id == NameMap.detailId
+            ).filter(
+                NameMap.name.in_([i for i in cache.all if i])
             ).first()
 
             if detail is None:
                 logger.debug(f'detail {cache.name} is None, create detail')
                 detail, _ = self.create_detail(cache, session)
+                self.create_map(detail.all, detail, session)
                 pictures.append((str(detail.id), detail.picture))
                 continue
 
             logger.debug(f'detail {cache.name} exists, update detail')
             detail.all = list(set(detail.all + cache.all))
+            self.create_map(detail.all, detail, session)
             flag_modified(detail, 'all')
 
             score: Score = session.query(Score).filter(Score.detailId == detail.id, Score.date == cache.date).first()  # type: ignore
@@ -156,6 +159,32 @@ class Collect(object):
 
         return score
 
+    @staticmethod
+    def create_map(names: Iterable[str], detail: Detail, session: Session) -> list[NameMap]:
+        """
+        @brief 为新的动漫条目创建名称映射记录
+
+        @param names 映射名称列表
+        @param detail 详细信息对象，与新创建的映射相关联
+        @param session 数据库会话对象，用于添加新的映射记录
+
+        @return 创建的映射对象列表
+        @retval list[NameMap] 新创建的映射对象列表
+        """
+        name_objects = []
+
+        for name in names:
+            # 检查记录是否已存在
+            name_object = session.query(NameMap).filter(NameMap.name == name).first()
+
+            if not name_object:
+                name_object = NameMap(name=name, detailId=detail.id)
+                session.add(name_object)
+
+            name_objects.append(name_object)
+
+        return name_objects
+
     def split_cache_to_detail_and_score(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
         """
         @brief 将缓存数据分割为详细信息和评分两个对象
@@ -169,7 +198,7 @@ class Collect(object):
         detail = Detail(
             name=cache.name,
             translation=cache.translation,
-            all=cache.all,
+            all=list(set(cache.all)),
             year=cache.year,
             season=cache.season,
             time=cache.time,
