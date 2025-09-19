@@ -75,7 +75,7 @@ def handle_detail(response: Response):
     logger.debug('name analysis successfully')
 
     time: str = root.xpath('./startdate')[0].text.strip()
-    key: int = len(time.strip('-'))
+    key: int = len(time.split('-'))
     if key == 3:
         release_date: date = datetime.strptime(time, '%Y-%m-%d').date()
     elif key == 2:
