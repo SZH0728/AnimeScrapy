@@ -75,7 +75,15 @@ def handle_detail(response: Response):
     logger.debug('name analysis successfully')
 
     time: str = root.xpath('./startdate')[0].text.strip()
-    release_date: date = datetime.strptime(time, '%Y-%m-%d').date()
+    key: int = len(time.strip('-'))
+    if key == 3:
+        release_date: date = datetime.strptime(time, '%Y-%m-%d').date()
+    elif key == 2:
+        release_date: date = datetime.strptime(time, '%Y-%m').date()
+    elif key == 1:
+        release_date: date = datetime.strptime(time, '%Y').date()
+    else:
+        raise ValueError(f'Invalid date: {time}')
 
     cache_object.year = release_date.year
     if 1 <= release_date.month <= 3:
