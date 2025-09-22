@@ -54,7 +54,6 @@ def init_request() -> list[Request]:
 
     return [Request('GET', f'https://www.anikore.jp/chronicle/{today.year}/{season}/')]
 
-
 AnikoreSpider.config.HANDLE.INIT_URL_FUNCTION = init_request
 
 

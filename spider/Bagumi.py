@@ -34,6 +34,7 @@ BagumiSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
 BagumiSpider.config.HANDLE.INIT_URL = Request('GET', 'https://api.bgm.tv/calendar')
 
+
 @BagumiSpider.route('api.bgm.tv/calendar')
 def handle_calender(response: Response) -> list[Request]:
     data = loads(response.content)

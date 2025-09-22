@@ -36,7 +36,23 @@ MALSpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = headers = {
 }
 MALSpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
-MALSpider.config.HANDLE.INIT_URL = Request('GET', 'https://myanimelist.net/anime/season')
+def init_request() -> list[Request]:
+    today: date = datetime.now(DEFAULT_TZ).date()
+
+    season: str = ''
+    if 1 <= today.month <= 3:
+        season = 'winter'
+    elif 4 <= today.month <= 6:
+        season = 'spring'
+    elif 7 <= today.month <= 9:
+        season = 'summer'
+    elif 10 <= today.month <= 12:
+        season = 'autumn'
+
+    return [Request('GET', f'https://myanimelist.net/anime/season/{today.year}/{season}')]
+
+MALSpider.config.HANDLE.INIT_URL_FUNCTION = init_request
+
 
 @MALSpider.route('myanimelist.net/anime/season')
 def handle_season(response: Response) -> list[Request]:

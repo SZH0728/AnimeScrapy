@@ -36,7 +36,22 @@ AniDBAPISpider.config.REQUEST.DEFAULT_REQUEST_HEADERS = {
 }
 AniDBAPISpider.config.REQUEST.DOWNLOAD_DELAY = 300
 
-AniDBAPISpider.config.HANDLE.INIT_URL = Request('GET', 'https://anidb.net/anime/season/?do=calendar&h=1&view=smallgrid')
+def init_request() -> list[Request]:
+    today: date = datetime.now(DEFAULT_TZ).date()
+
+    season: str = ''
+    if 1 <= today.month <= 3:
+        season = 'winter'
+    elif 4 <= today.month <= 6:
+        season = 'spring'
+    elif 7 <= today.month <= 9:
+        season = 'summer'
+    elif 10 <= today.month <= 12:
+        season = 'autumn'
+
+    return [Request('GET', f'https://anidb.net/anime/season/{today.year}/{season}/?do=calendar&h=1')]
+
+AniDBAPISpider.config.HANDLE.INIT_URL_FUNCTION = init_request
 
 
 @AniDBAPISpider.route('anidb.net/anime/season/')
