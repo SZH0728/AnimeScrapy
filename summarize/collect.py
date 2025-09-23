@@ -40,7 +40,7 @@ class Collect(object):
         pictures: list[tuple[str, str]] = []
         with SessionFactory() as session:
             while True:
-                urls: list[tuple[str, str]] = self.cycle(self._web_priority.current_web_id, session)
+                urls: list[tuple[str, str]] = self.cycle(self._web_priority.current_web_id, self._web_priority.web_list, session)
                 pictures.extend(urls)
 
                 condition: bool = self._web_priority.next()
@@ -49,13 +49,14 @@ class Collect(object):
                     break
         return pictures
 
-    def cycle(self, web_id: int, session: Session) -> list[tuple[str, str]]:
+    def cycle(self, web_id: int, web_list: list[int], session: Session) -> list[tuple[str, str]]:
         """
         @brief 处理单个网站的数据收集周期
 
         查询指定网站的缓存数据，检查是否已存在对应的详细信息，如果不存在则创建，否则更新
 
         @param web_id 网站ID
+        @param web_list 所有网站ID列表
         @param session 数据库会话对象
         @return 返回图片URL列表，格式为(detail_id, picture_url)元组
         @retval list[tuple[str, str]] 包含(detail_id, picture_url)的元组列表
@@ -82,9 +83,15 @@ class Collect(object):
                 continue
 
             logger.debug(f'detail {cache.name} exists, update detail')
-            detail.all = list(set(detail.all + cache.all))
+
+            if web_list.index(detail.web) > web_list.index(web_id):
+                logger.debug(f'detail {cache.name} is newer, update detail')
+                self.update_detail(cache, detail)
+            else:
+                detail.all = list(set(detail.all + cache.all))
+                flag_modified(detail, 'all')
+
             self.create_map(detail.all, detail, session)
-            flag_modified(detail, 'all')
 
             score: Score = session.query(Score).filter(Score.detailId == detail.id, Score.date == cache.date).first()  # type: ignore
 
@@ -119,6 +126,32 @@ class Collect(object):
             score.vote += i[1]
             summarize += i[0] * i[1]
         score.score = summarize / score.vote if score.vote else 0
+
+    @staticmethod
+    def update_detail(cache: Cache, detail: Detail):
+        """
+        @brief 更新已存在的动漫条目的详细信息
+
+        根据缓存中的数据更新详细信息表
+
+        @param cache 缓存数据对象
+        @param detail 详细信息对象
+        """
+        detail.name = cache.name
+        detail.translation = cache.translation
+        detail.all = list(set(detail.all + cache.all))
+        detail.year = cache.year
+        detail.season = cache.season
+        detail.time = cache.time
+        detail.tag = cache.tag
+        detail.description = cache.description
+        detail.web = cache.web
+        detail.webId = cache.webId
+        detail.picture = cache.picture
+
+        # 标记JSON字段为已修改，以便SQLAlchemy能正确更新
+        flag_modified(detail, 'all')
+        flag_modified(detail, 'tag')
 
     def create_detail(self, cache: Cache, session: Session) -> tuple[Detail, Score]:
         """

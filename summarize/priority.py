@@ -26,6 +26,7 @@ class WebPriority(object):
         logger.info(f'Selected {len(self._webs)} webs successfully')
 
         self._current: int = 0
+        self.web_list: list[int] = [web.id for web in self._webs]
 
     @property
     def current_web_id(self) -> int:
