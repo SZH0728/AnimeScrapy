@@ -54,7 +54,7 @@ def init_request() -> list[Request]:
 AniDBAPISpider.config.HANDLE.INIT_URL_FUNCTION = init_request
 
 
-@AniDBAPISpider.route('anidb.net/anime/season/')
+@AniDBAPISpider.route('anidb.net/anime/season/\d+/.+/$', regex=True)
 def handle_season(response: Response)  -> list[Request]:
     root = etree.HTML(response.text)
 
