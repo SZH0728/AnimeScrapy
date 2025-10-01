@@ -65,6 +65,10 @@ def handle_subject(response: Response):
     cache_object.all_data = [i for i in cache_object.all_data if i]
     logger.debug('name analysis successfully')
 
+    if not data['date']:
+        logger.error(f'{cache_object.name} has no release date, dropped')
+        return
+
     release_date: tuple[int, ...] = tuple(int(i) for i in data['date'].split('-'))
     cache_object.year = release_date[0]
     if 1 <= release_date[1] <= 3:
