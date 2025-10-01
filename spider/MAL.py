@@ -65,6 +65,7 @@ def handle_season(response: Response) -> list[Request]:
     return  [Request('GET', url) for url in following]
 
 
+@MALSpider.route(r'myanimelist.net/anime/season')
 @MALSpider.route(r'myanimelist.net/anime/\d+/.+', regex=True)
 def handle_detail(response: Response):
     cache_object: CacheData = CacheData()
