@@ -74,6 +74,10 @@ class Control(object):
         """
         logger.debug(f"add tasks: {len(tuple(task for task in tasks))}")
         for task in tasks:
+            if not task.url:
+                logger.warning(f"task url is empty: {task}")
+                continue
+
             self._send.send_nowait(task)
 
 if __name__ == '__main__':
