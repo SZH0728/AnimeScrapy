@@ -54,6 +54,7 @@ def init_request() -> list[Request]:
 MALSpider.config.HANDLE.INIT_URL_FUNCTION = init_request
 
 
+@MALSpider.route(r'myanimelist.net/anime/season')
 @MALSpider.route('myanimelist.net/anime/season/\d+/.+$', regex=True)
 def handle_season(response: Response) -> list[Request]:
     root = etree.HTML(response.text)
@@ -65,7 +66,6 @@ def handle_season(response: Response) -> list[Request]:
     return  [Request('GET', url) for url in following]
 
 
-@MALSpider.route(r'myanimelist.net/anime/season')
 @MALSpider.route(r'myanimelist.net/anime/\d+/.+', regex=True)
 def handle_detail(response: Response):
     cache_object: CacheData = CacheData()
