@@ -11,8 +11,10 @@ from data.parse import ExampleParseData, ParseBaseData
 from data.request import (
     BatchHttpxRequestData,
     ExampleRequestData,
+    MultiHttpxRequestData,
     RequestBaseData,
     SingleHttpxRequestData,
+    ThrottledHttpxRequestData,
 )
 from data.response import ExampleResponseData, HttpxResponseData, ResponseBaseData
 from data.site import ExampleSiteHandleData, SiteHandleBaseData
@@ -24,8 +26,10 @@ __all__ = [
     # request
     "RequestBaseData",
     "ExampleRequestData",
+    "MultiHttpxRequestData",
     "SingleHttpxRequestData",
     "BatchHttpxRequestData",
+    "ThrottledHttpxRequestData",
     # response
     "ResponseBaseData",
     "ExampleResponseData",
