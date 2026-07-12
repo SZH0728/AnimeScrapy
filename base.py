@@ -2,7 +2,7 @@
 # AUTHOR: Sun
 """
 @brief 定义所有处理单元的统一接口抽象基类
-@details HandlerBase 是整个事件总线框架中 Requester、SiteRouter、SiteHandler、
+@details HandlerBase 是整个事件总线框架中 Requester、SiteRouterBase、SiteGatewayBase、
          Parser、Storage 等所有处理单元共同遵守的接口契约。
          Bus 调度器的注册表值类型均为 HandlerBase，子协程通过统一调用
          handle() 方法完成任务分发与处理，实现各处理单元之间的解耦。
