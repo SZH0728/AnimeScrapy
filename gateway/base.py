@@ -48,8 +48,8 @@ class SiteGatewayBase[T: SiteGatewayBaseData](HandlerBase[T], ABC):
                  路径不匹配任何已知类型时，须在方法内部记录 logger.warning 并返回 None，
                  不向上抛出异常。
         @param task 携带站点响应信息的数据包，子类可访问 task.response 和 task.task
-        @return Iterable[TaskBaseData] 多个后续任务；
-                TaskBaseData 单个后续任务；
+        @return Iterable[ParseBaseData] 多个后续任务；
+                ParseBaseData 单个后续任务；
                 None 路径未命中或处理终止
         """
 
