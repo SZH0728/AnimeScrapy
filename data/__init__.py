@@ -17,7 +17,7 @@ from data.request import (
     ThrottledHttpxRequestData,
 )
 from data.response import ExampleResponseData, HttpxResponseData, ResponseBaseData
-from data.site import ExampleSiteHandleData, SiteHandleBaseData
+from data.gateway import ExampleSiteGatewayData, HttpxSiteGatewayData, SiteGatewayBaseData
 from data.store import ExampleStoreData, StoreBaseData
 
 __all__ = [
@@ -34,9 +34,10 @@ __all__ = [
     "ResponseBaseData",
     "ExampleResponseData",
     "HttpxResponseData",
-    # site
-    "SiteHandleBaseData",
-    "ExampleSiteHandleData",
+    # gateway
+    "SiteGatewayBaseData",
+    "ExampleSiteGatewayData",
+    "HttpxSiteGatewayData",
     # parse
     "ParseBaseData",
     "ExampleParseData",
