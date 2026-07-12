@@ -13,7 +13,8 @@ from logging import getLogger
 from collections.abc import Iterable
 
 from base import HandlerBase
-from data import RequestBaseData, ResponseBaseData
+from data.request import RequestBaseData
+from data.response import ResponseBaseData
 
 logger = getLogger(__name__)
 
