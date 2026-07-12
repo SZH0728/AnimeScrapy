@@ -12,8 +12,6 @@ from data.base import TaskBaseData
 from gateway.base import SiteGatewayBase
 
 # 站点数据类 → 站点处理器类 的全局注册表
-# 新增站点只需在此追加一行，例如：
-#   BilibiliSiteGatewayData: BilibiliSiteGateway
 DISPATCH_REGISTRY: dict[type[TaskBaseData], type[SiteGatewayBase]] = {
 }
 
