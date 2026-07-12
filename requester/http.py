@@ -14,7 +14,14 @@ from logging import getLogger
 
 from httpx import AsyncClient, Request, Response, HTTPError
 
-from data import RequestBaseData, MultiHttpxRequestData, SingleHttpxRequestData, BatchHttpxRequestData, ThrottledHttpxRequestData, HttpxResponseData
+from data.request import (
+    RequestBaseData,
+    MultiHttpxRequestData,
+    SingleHttpxRequestData,
+    BatchHttpxRequestData,
+    ThrottledHttpxRequestData,
+)
+from data.response import HttpxResponseData
 from requester.base import RequesterBase
 
 logger = getLogger(__name__)
@@ -92,7 +99,10 @@ class SingleHttpRequester(RequesterBase[SingleHttpxRequestData], HttpRequesterMi
             async with AsyncClient() as client:
                 response = await client.send(task.request)
 
-            return self._handle_response(task, response)
+            result = self._handle_response(task, response)
+            if result is not None:
+                logger.info(f"请求成功 [{task.request.url}]")
+            return result
         except HTTPError as e:
             logger.warning(f'{task.request.url} 请求失败：{e}')
             return self._retry_single(task, e)
@@ -130,6 +140,11 @@ class BatchHttpRequester(RequesterBase[BatchHttpxRequestData], HttpRequesterMixi
             else:
                 results.append(self._handle_response(task, result))
 
+        success_count = sum(1 for r in results if r is not None)
+        logger.info(
+            f"批量请求完成，共 {len(task.requests)} 条，"
+            f"成功 {success_count} 条，失败 {len(failed_requests)} 条"
+        )
         results.append(self._retry_batch(task, failed_requests))
         return results
 
@@ -177,6 +192,11 @@ class ThrottledHttpRequester(RequesterBase[ThrottledHttpxRequestData], HttpReque
                 if i < last_index:
                     await asyncio.sleep(task.interval)
 
+        success_count = sum(1 for r in results if r is not None)
+        logger.info(
+            f"节流请求完成，共 {len(task.requests)} 条，"
+            f"成功 {success_count} 条，失败 {len(failed_requests)} 条"
+        )
         results.append(self._retry_batch(task, failed_requests))
         return results
 
