@@ -18,9 +18,6 @@ from router.httpx_router import HttpxSiteRouter
 
 # 域名 → 站点数据类 的全局注册表
 # 键类型：str（精确匹配，优先级高）或 re.Pattern（正则匹配，按注册顺序首个命中）
-# 新增站点只需在此追加一行，例如：
-#   "www.bilibili.com": BilibiliSiteHandleData
-#   re.compile(r".*\.bilibili\.com"): BilibiliSiteHandleData
 HTTPX_DOMAIN_REGISTRY: dict[str | Pattern[str], type[HttpxSiteGatewayData]] = {
 }
 
