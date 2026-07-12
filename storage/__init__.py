@@ -7,9 +7,9 @@
          新增具体存储后端时，只需在 DISPATCH_REGISTRY 中追加一行映射。
 """
 
-from data.store import StoreBaseData
-from data.base import TaskBaseData
 from base import HandlerBase
+from data.base import TaskBaseData
+from data.store import StoreBaseData
 from storage.base import StorageBase
 
 # 存储数据类型 → 存储器类的调度注册表
