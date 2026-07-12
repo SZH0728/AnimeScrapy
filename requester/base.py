@@ -25,7 +25,7 @@ class RequesterBase[T: RequestBaseData](HandlerBase[T], ABC):
              handle() 是具体方法，作为纯兜底保护；重试逻辑由各具体子类在 _do_request() 中自行管理。
     """
 
-    async def handle(self, task: T) -> Iterable[ResponseBaseData | RequestBaseData | None] | ResponseBaseData | RequestBaseData | None:
+    async def handle(self, task: T) -> Iterable[ResponseBaseData | T | None] | ResponseBaseData | T | None:
         """
         @brief 兜底保护：透传 _do_request() 结果，捕获未预期异常后丢弃任务
         @details 不含任何重试逻辑。正常的请求失败与重试由子类在 _do_request() 内部处理，
@@ -40,7 +40,7 @@ class RequesterBase[T: RequestBaseData](HandlerBase[T], ABC):
             return None
 
     @abstractmethod
-    async def _do_request(self, task: T) ->  Iterable[ResponseBaseData | RequestBaseData | None] | ResponseBaseData | RequestBaseData | None:
+    async def _do_request(self, task: T) ->  Iterable[ResponseBaseData | T | None] | ResponseBaseData | T | None:
         """
         @brief 执行实际网络请求（子类实现）
         @details 子类须在此方法中完成完整的请求生命周期，包括：
@@ -48,8 +48,8 @@ class RequesterBase[T: RequestBaseData](HandlerBase[T], ABC):
                  正常的请求失败不应向上抛出，应在此方法内部处理。
         @param task 携带请求信息的请求数据包
         @return ResponseBaseData 单条请求成功的响应；
-                Iterable[ResponseBaseData | RequestBaseData] 批次结果（可含重试任务）；
-                RequestBaseData retry 递减后的重试任务；
+                Iterable[ResponseBaseData | T] 批次结果（可含重试任务）；
+                T retry 递减后的重试任务；
                 None 请求失败且重试耗尽
         """
 
