@@ -12,8 +12,6 @@ from data.base import TaskBaseData
 from parser.base import ParserBase
 
 # 解析数据类 → 解析器类 的全局注册表
-# 新增解析器只需在此追加一行，例如：
-#   BilibiliEpisodeListParseData: BilibiliEpisodeListParser
 DISPATCH_REGISTRY: dict[type[TaskBaseData], type[ParserBase]] = {
 }
 
