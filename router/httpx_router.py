@@ -22,7 +22,7 @@ class HttpxSiteRouter(SiteRouterBase[HttpxResponseData]):
     """
     @brief httpx 响应数据包的站点路由器
     @details 处理 HttpxResponseData，根据响应 URL 的域名将其包装为对应站点的
-             HttpxSiteHandleData 子类后投回总线。
+             HttpxSiteGatewayData 子类后投回总线。
              注册表支持 str 精确键（O(1)）和 re.Pattern 正则键（顺序遍历）。
     """
 
@@ -53,7 +53,9 @@ class HttpxSiteRouter(SiteRouterBase[HttpxResponseData]):
             logger.warning(f'域名 [{domain}] 未在 HTTPX_DOMAIN_REGISTRY 中注册，任务已丢弃')
             return None
 
-        return self._wrap(task, target_cls)
+        result = self._wrap(task, target_cls)
+        logger.info(f"响应 [{domain}] 路由至站点 [{target_cls.__name__}]")
+        return result
 
     def _match(self, domain: str) -> type[HttpxSiteGatewayData] | None:
         """
@@ -87,7 +89,7 @@ class HttpxSiteRouter(SiteRouterBase[HttpxResponseData]):
         """
         @brief 将 HttpxResponseData 包装为目标站点数据类实例
         @param task 原始 httpx 响应数据包
-        @param target_cls 命中的站点数据类（须与 HttpxSiteHandleData 签名一致）
+        @param target_cls 命中的站点数据类（须与 HttpxSiteGatewayData 签名一致）
         @return 包装后的站点数据包实例
         """
         return target_cls(task=task.task, response=task.response)
