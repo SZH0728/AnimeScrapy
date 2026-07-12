@@ -8,12 +8,8 @@
 """
 
 from base import HandlerBase
-from data import (
-    TaskBaseData,
-    SingleHttpxRequestData,
-    BatchHttpxRequestData,
-    ThrottledHttpxRequestData,
-)
+from data.base import TaskBaseData
+from data.request import SingleHttpxRequestData, BatchHttpxRequestData, ThrottledHttpxRequestData
 from requester.base import RequesterBase
 from requester.http import SingleHttpRequester, BatchHttpRequester, ThrottledHttpRequester
 
@@ -30,11 +26,7 @@ def build_http_requesters() -> dict[type[TaskBaseData], HandlerBase]:
     @details 返回值可直接用 ** 解包合并到 main.py 的 dispatch_registry。
     @return 类型 → 实例的映射，包含三种 httpx 请求策略的 Handler
     """
-    return {
-        SingleHttpxRequestData: SingleHttpRequester(),
-        BatchHttpxRequestData: BatchHttpRequester(),
-        ThrottledHttpxRequestData: ThrottledHttpRequester(),
-    }
+    return {cls: parser_cls() for cls, parser_cls in DISPATCH_REGISTRY.items()}
 
 
 __all__ = [
