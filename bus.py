@@ -15,7 +15,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING
 
 from base import HandlerBase
-from data import TaskBaseData
+from data.base import TaskBaseData
 
 if TYPE_CHECKING:
     from scheduler import Scheduler
@@ -101,6 +101,7 @@ class Bus(object):
                     f"处理器 {type(handler).__name__} 处理任务 {type(task).__name__} 时发生异常：{e}",
                     exc_info=True,
                 )
+                return
 
             if not isinstance(result, Iterable):
                 result = [result]
