@@ -33,7 +33,8 @@ class HttpRequesterMixin(object):
         @brief 将 httpx.Response 包装为 HttpxResponseData
         @param task 发起本次请求的任务数据包
         @param response httpx 响应对象
-        @return 包含原始任务与响应的数据包
+        @return 成功时返回 HttpxResponseData；404 时返回 None（资源不存在，链路终止）
+        @throws httpx.HTTPStatusError 当响应状态为非 404 的错误码时由 raise_for_status() 抛出
         """
         if response.status_code == 404:
             return None
@@ -62,6 +63,7 @@ class HttpRequesterMixin(object):
         @brief 批量请求的重试追加：有失败时追加重试任务或记录丢弃日志
         @param task 原始批量请求任务
         @param failed 本轮失败的请求列表
+        @return 无失败或 retry 耗尽时返回 None；有失败且 retry > 1 时返回递减后的新批次任务
         """
         if not failed:
             return None
@@ -133,6 +135,13 @@ class BatchHttpRequester(RequesterBase[BatchHttpxRequestData], HttpRequesterMixi
 
     @staticmethod
     async def _send(request: Request, client: AsyncClient, semaphore: asyncio.Semaphore) -> Response:
+        """
+        @brief 在 Semaphore 许可下发送单条请求
+        @param request 待发送的 httpx.Request
+        @param client 当前批次共享的 AsyncClient
+        @param semaphore 控制最大并发数的信号量
+        @return httpx 响应对象
+        """
         async with semaphore:
             return await client.send(request)
 
