@@ -225,3 +225,4 @@ CLAUDE.md
 
 # 本地配置文件，含敏感信息（数据库密码等），不入库
 config.ini
+*.json
