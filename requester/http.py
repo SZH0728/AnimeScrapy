@@ -37,17 +37,17 @@ class HttpRequesterMixin(object):
     @staticmethod
     def _handle_response(task: RequestBaseData, response: Response) -> HttpxResponseData | None:
         """
-        @brief 将 httpx.Response 包装为 HttpxResponseData
+        @brief 将 httpx.Response 包装为 HttpxResponseData，并从请求任务复制 meta
         @param task 发起本次请求的任务数据包
         @param response httpx 响应对象
-        @return 成功时返回 HttpxResponseData；404 时返回 None（资源不存在，链路终止）
+        @return 成功时返回 HttpxResponseData（meta 从 task.meta 复制）；404 时返回 None（资源不存在，链路终止）
         @throws httpx.HTTPStatusError 当响应状态为非 404 的错误码时由 raise_for_status() 抛出
         """
         if response.status_code == 404:
             return None
 
         response.raise_for_status()
-        return HttpxResponseData(task=task, response=response)
+        return HttpxResponseData(task=task, response=response, meta=task.meta)
 
     @staticmethod
     def _retry_single[T: RequestBaseData](task: T, exc: Exception) -> T | None:
