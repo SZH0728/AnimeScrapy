@@ -7,10 +7,12 @@
          BatchHttpxRequestData 对应并发发送的多条请求，并发量在数据类中声明；
          ThrottledHttpxRequestData 对应间隔发送的多条请求，间隔在数据类中声明。
          含 httpx.Request 字段的类使用 Httpx 前缀以标明第三方依赖。
+         RequestBaseData 提供 meta 字段用于透传请求上下文，所有子类自动继承。
 """
 
 from dataclasses import dataclass, field
 from logging import getLogger
+from typing import Any
 
 import httpx
 
@@ -23,11 +25,15 @@ logger = getLogger(__name__)
 class RequestBaseData(TaskBaseData):
     """
     @brief 请求数据包根基类
-    @details 仅携带重试计数，不含任何第三方类型字段。
+    @details 仅携带重试计数和可选上下文，不含任何第三方类型字段。
              所有具体请求子类继承此类并添加实际请求载体。
     @param retry 剩余重试次数，耗尽后 Requester 将丢弃该任务
+    @param meta 请求上下文，键值对形式，默认空字典；
+               不参与哈希与比较，由调用方按需携带透传数据（如来源 ID、页码等）
     """
     retry: int  # 剩余重试次数
+    # dict 不可哈希，kw_only 规避子类必填字段的排序约束
+    meta: dict[str, Any] = field(default_factory=dict, hash=False, compare=False, kw_only=True)
 
 
 @dataclass(frozen=True)
