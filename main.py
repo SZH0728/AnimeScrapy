@@ -7,11 +7,9 @@
 """
 
 import asyncio
-import sys
-from logging import getLogger, Formatter, DEBUG, INFO, ERROR, WARNING, StreamHandler
-from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
+from logging import getLogger
 
+from config import config, setup_logging
 from base import HandlerBase
 from data.base import TaskBaseData
 from scheduler.base import Scheduler
@@ -24,51 +22,6 @@ from storage import build_storages
 from bus import Bus, BusConfig
 
 logger = getLogger(__name__)
-
-MAX_CONCURRENT_TASKS: int = 20  # 最大并发子协程数，对应 Bus 内部信号量上限
-
-
-def setup_logging(log_dir: str = 'logs') -> None:
-    """
-    @brief 初始化日志配置
-    @details 根据操作系统自动切换策略：
-             Windows/macOS 使用开发模式（控制台 DEBUG），
-             Linux 使用生产模式（纯文件，INFO 留 7 天，ERROR 永不删除）。
-             两种模式均压制 httpx / hpack / asyncio 的 DEBUG 噪音。
-    @param log_dir 生产模式下日志文件存放目录，默认 logs/
-    """
-    _FMT = '%(asctime)s [%(levelname)-8s] %(name)s - %(message)s'
-
-    root = getLogger()
-    root.setLevel(DEBUG)
-
-    if sys.platform in ('win32', 'darwin'):
-        handler = StreamHandler()
-        handler.setLevel(DEBUG)
-        handler.setFormatter(Formatter(_FMT, datefmt='%H:%M:%S'))
-        root.addHandler(handler)
-    else:
-        Path(log_dir).mkdir(parents=True, exist_ok=True)
-        fmt = Formatter(_FMT, datefmt='%Y-%m-%d %H:%M:%S')
-
-        info_h = TimedRotatingFileHandler(
-            f'{log_dir}/info.log', when='midnight', backupCount=7, encoding='utf-8',
-        )
-        info_h.setLevel(INFO)
-        info_h.setFormatter(fmt)
-
-        # backupCount=0 使轮转时不删除旧文件，error 日志永久保留
-        error_h = TimedRotatingFileHandler(
-            f'{log_dir}/error.log', when='midnight', backupCount=0, encoding='utf-8',
-        )
-        error_h.setLevel(ERROR)
-        error_h.setFormatter(fmt)
-
-        root.addHandler(info_h)
-        root.addHandler(error_h)
-
-    for lib in ('httpx', 'hpack', 'asyncio'):
-        getLogger(lib).setLevel(WARNING)
 
 
 async def main() -> None:
@@ -87,7 +40,7 @@ async def main() -> None:
 
     bus_config: BusConfig = BusConfig(
         dispatch_registry=dispatch_registry,
-        max_concurrent_tasks=MAX_CONCURRENT_TASKS,
+        max_concurrent_tasks=config.getint('bus', 'max_concurrent_tasks'),
     )
     bus: Bus = Bus(bus_config)
     scheduler: Scheduler = Scheduler(list(SCHEDULE_REGISTRY))
