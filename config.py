@@ -3,7 +3,7 @@
 """
 @brief 全局配置模块
 @details 读取 INI 配置文件，以模块级单例 config 暴露全部配置项。
-         INI 文件路径优先从环境变量 ANIME_SCRAPY_CONFIG 读取，
+         INI 文件路径优先从环境变量 SPIDER_CONFIG 读取，
          未设置时降级为进程工作目录下的 config.ini（适配本地开发与 Docker 挂载）。
          setup_logging() 从 [logging] 节读取参数，根据 [app] debug 开关
          选择开发模式（控制台）或生产模式（文件轮转），由 main.py 唯一调用一次。
@@ -16,7 +16,7 @@ from logging import DEBUG, ERROR, Formatter, INFO, StreamHandler, WARNING, getLo
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
-_CONFIG_PATH: str = environ.get('ANIME_SCRAPY_CONFIG', 'config.ini')
+_CONFIG_PATH: str = environ.get('SPIDER_CONFIG', 'config.ini')
 
 config: RawConfigParser = RawConfigParser()
 config.read(_CONFIG_PATH, encoding='utf-8')
