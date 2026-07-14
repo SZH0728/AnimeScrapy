@@ -46,6 +46,10 @@ class BangumiSubjectMetaStorage(StorageBase[BangumiSubjectMetaStoreData]):
             return None
 
         logger.info(f"写入 1 条 {type(task).__name__} 数据")
+
+        if task.cover_url.strip() in ('', 'http://', 'https://'):
+            return None
+
         return self._build_cover_request(task.cover_url, row[0])
 
     @staticmethod
