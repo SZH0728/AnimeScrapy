@@ -33,6 +33,9 @@ class BangumiSubjectDetailParser(ParserBase[BangumiSubjectDetailParseData]):
         """
         subject: dict = task.response.json()
         infobox: list[dict] = subject.get('infobox') or []
+        cover_url: str = (subject.get('images', {})).get('common', '')
+        if not cover_url.startswith(r'http'):
+            cover_url = f'https://{cover_url}'
 
         store = BangumiSubjectMetaStoreData(
             bgm_id=subject['id'],
@@ -44,7 +47,7 @@ class BangumiSubjectDetailParser(ParserBase[BangumiSubjectDetailParseData]):
             aliases=self._extract_aliases(infobox),
             tags=tuple(t['name'] for t in subject.get('tags', [])),
             infobox=infobox,
-            cover_url=(subject.get('images') or {}).get('large') or '',
+            cover_url=cover_url,
         )
 
         logger.info(f"解析 {type(task).__name__} 产出 1 个后续任务")
