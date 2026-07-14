@@ -46,5 +46,25 @@ class HttpxSiteGatewayData(SiteGatewayBaseData, HttpxResponseData):
     """
 
 
+@dataclass(frozen=True)
+class BangumiApiGatewayData(HttpxSiteGatewayData):
+    """
+    @brief api.bgm.tv 域名路由标记
+    @details 由 HttpxSiteRouter 在匹配到 api.bgm.tv 时产出，
+             路由到 BangumiApiGateway 处理器。
+             字段全部由继承链提供，无额外字段。
+    """
+
+
+@dataclass(frozen=True)
+class BangumiCoverGatewayData(HttpxSiteGatewayData):
+    """
+    @brief lain.bgm.tv 封面图域名路由标记
+    @details 由 HttpxSiteRouter 在匹配到 lain.bgm.tv 时产出，
+             路由到 BangumiCoverGateway 处理器。
+             字段全部由继承链提供，无额外字段。
+    """
+
+
 if __name__ == '__main__':
     pass
