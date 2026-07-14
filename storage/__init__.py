@@ -9,11 +9,18 @@
 
 from base import HandlerBase
 from data.base import TaskBaseData
-from data.store import StoreBaseData
+from data.store import BangumiCalendarBatchStoreData, BangumiCoverStoreData, BangumiSubjectMetaStoreData, StoreBaseData
+from storage.bangumi.calendar import BangumiCalendarStorage
+from storage.bangumi.cover import BangumiCoverStorage
+from storage.bangumi.subject import BangumiSubjectMetaStorage
 from storage.base import StorageBase
 
 # 存储数据类型 → 存储器类的调度注册表
-DISPATCH_REGISTRY: dict[type[StoreBaseData], type[StorageBase]] = {}
+DISPATCH_REGISTRY: dict[type[StoreBaseData], type[StorageBase]] = {
+    BangumiCalendarBatchStoreData: BangumiCalendarStorage,
+    BangumiSubjectMetaStoreData:   BangumiSubjectMetaStorage,
+    BangumiCoverStoreData:         BangumiCoverStorage,
+}
 
 
 def build_storages() -> dict[type[TaskBaseData], HandlerBase]:
