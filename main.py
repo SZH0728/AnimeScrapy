@@ -10,6 +10,7 @@ import asyncio
 from logging import getLogger
 
 from config import config, setup_logging
+from database import init_db
 from base import HandlerBase
 from data.base import TaskBaseData
 from scheduler.base import Scheduler
@@ -24,7 +25,7 @@ from bus import Bus, BusConfig
 logger = getLogger(__name__)
 
 
-async def main() -> None:
+async def main(debug_seed: TaskBaseData | None = None) -> None:
     """
     @brief 装配所有处理器并启动事件总线
     @details 按阶段顺序调用各模块工厂方法，合并为单一 dispatch_registry，
@@ -45,10 +46,39 @@ async def main() -> None:
     bus: Bus = Bus(bus_config)
     scheduler: Scheduler = Scheduler(list(SCHEDULE_REGISTRY))
 
+    if debug_seed:
+        await bus.put(debug_seed)
+
     logger.info("框架启动，开始运行事件总线")
     await bus.run(scheduler)
 
 
 if __name__ == '__main__':
     setup_logging()
-    asyncio.run(main())
+    init_db(config.get('bangumi', 'database_url'))
+
+    if config.getboolean('app', 'use_vcr', fallback=False):
+        import vcr as _vcr  # type: ignore[import-untyped]
+        import httpx
+
+        from data.request import SingleHttpxRequestData
+
+        _vcr_instance = _vcr.VCR(
+            cassette_library_dir=config.get('app', 'vcr_cassette_dir', fallback='cassettes'),
+            record_mode='new_episodes',
+            match_on=['method', 'scheme', 'host', 'port', 'path', 'query'],
+        )
+
+        with _vcr_instance.use_cassette('bangumi.yaml'):
+            seed = SingleHttpxRequestData(
+                retry=config.getint('bangumi', 'retry'),
+                request=httpx.Request(
+                    'GET',
+                    'https://api.bgm.tv/calendar',
+                    headers={'User-Agent': config.get('bangumi', 'user_agent')},
+                )
+            )
+
+            asyncio.run(main(seed))
+    else:
+        asyncio.run(main())
