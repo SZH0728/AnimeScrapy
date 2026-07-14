@@ -9,10 +9,14 @@
 
 from base import HandlerBase
 from data.base import TaskBaseData
+from data.gateway import BangumiApiGatewayData, BangumiCoverGatewayData
+from gateway.bangumi import BangumiApiGateway, BangumiCoverGateway
 from gateway.base import SiteGatewayBase
 
 # 站点数据类 → 站点处理器类 的全局注册表
 DISPATCH_REGISTRY: dict[type[TaskBaseData], type[SiteGatewayBase]] = {
+    BangumiApiGatewayData:   BangumiApiGateway,
+    BangumiCoverGatewayData: BangumiCoverGateway,
 }
 
 
