@@ -56,29 +56,4 @@ async def main(debug_seed: TaskBaseData | None = None) -> None:
 if __name__ == '__main__':
     setup_logging()
     init_db(config.get('bangumi', 'database_url'))
-
-    if config.getboolean('app', 'use_vcr', fallback=False):
-        import vcr as _vcr  # type: ignore[import-untyped]
-        import httpx
-
-        from data.request import SingleHttpxRequestData
-
-        _vcr_instance = _vcr.VCR(
-            cassette_library_dir=config.get('app', 'vcr_cassette_dir', fallback='cassettes'),
-            record_mode='new_episodes',
-            match_on=['method', 'scheme', 'host', 'port', 'path', 'query'],
-        )
-
-        with _vcr_instance.use_cassette('bangumi.yaml'):
-            seed = SingleHttpxRequestData(
-                retry=config.getint('bangumi', 'retry'),
-                request=httpx.Request(
-                    'GET',
-                    'https://api.bgm.tv/calendar',
-                    headers={'User-Agent': config.get('bangumi', 'user_agent')},
-                )
-            )
-
-            asyncio.run(main(seed))
-    else:
-        asyncio.run(main())
+    asyncio.run(main())
