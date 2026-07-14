@@ -92,7 +92,7 @@ class HttpxSiteRouter(SiteRouterBase[HttpxResponseData]):
         @param target_cls 命中的站点数据类（须与 HttpxSiteGatewayData 签名一致）
         @return 包装后的站点数据包实例
         """
-        return target_cls(task=task.task, response=task.response)
+        return target_cls(task=task.task, response=task.response, meta=task.meta)
 
 
 if __name__ == '__main__':
