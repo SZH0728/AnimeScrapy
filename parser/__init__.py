@@ -9,10 +9,17 @@
 
 from base import HandlerBase
 from data.base import TaskBaseData
+from data.parse import BangumiCalendarParseData, BangumiCoverParseData, BangumiSubjectDetailParseData
 from parser.base import ParserBase
+from parser.bangumi.calendar import BangumiCalendarParser
+from parser.bangumi.cover import BangumiCoverParser
+from parser.bangumi.subject import BangumiSubjectDetailParser
 
 # 解析数据类 → 解析器类 的全局注册表
 DISPATCH_REGISTRY: dict[type[TaskBaseData], type[ParserBase]] = {
+    BangumiCalendarParseData:      BangumiCalendarParser,
+    BangumiSubjectDetailParseData: BangumiSubjectDetailParser,
+    BangumiCoverParseData:         BangumiCoverParser,
 }
 
 
