@@ -61,7 +61,7 @@ class BangumiCoverGateway(SiteGatewayBase[BangumiCoverGatewayData]):
         @param task 携带 lain.bgm.tv 响应的数据包
         @return BangumiCoverParseData 实例
         """
-        result = BangumiCoverParseData(task=task.task, response=task.response)
+        result = BangumiCoverParseData(task=task.task, response=task.response, meta=task.meta)
         logger.info(f"站点 [{type(self).__name__}] URL [{task.response.url.path}] 命中类型 [{type(result).__name__}]")
         return result
 
