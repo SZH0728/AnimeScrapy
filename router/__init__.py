@@ -12,13 +12,15 @@ from re import Pattern
 from base import HandlerBase
 from data.base import TaskBaseData
 from data.response import HttpxResponseData
-from data.gateway import HttpxSiteGatewayData
+from data.gateway import BangumiApiGatewayData, BangumiCoverGatewayData, HttpxSiteGatewayData
 from router.base import SiteRouterBase
 from router.httpx_router import HttpxSiteRouter
 
 # 域名 → 站点数据类 的全局注册表
 # 键类型：str（精确匹配，优先级高）或 re.Pattern（正则匹配，按注册顺序首个命中）
 HTTPX_DOMAIN_REGISTRY: dict[str | Pattern[str], type[HttpxSiteGatewayData]] = {
+    'api.bgm.tv':  BangumiApiGatewayData,
+    'lain.bgm.tv': BangumiCoverGatewayData,
 }
 
 
