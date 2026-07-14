@@ -27,7 +27,7 @@ class ParserBase[T: ParseBaseData](HandlerBase[T], ABC):
              解析器是框架中产出最多样化结果的处理单元，可同时产出新请求与落库数据。
     """
 
-    async def handle(self, task: T) -> list[RequestBaseData | StoreBaseData] | None:
+    async def handle(self, task: T) -> list[RequestBaseData | StoreBaseData] | RequestBaseData | StoreBaseData | None:
         """
         @brief 兜底保护：透传 _do_parse() 结果，捕获未预期异常后丢弃任务
         @param task 携带 HTTP 响应信息的解析输入数据包
@@ -40,7 +40,7 @@ class ParserBase[T: ParseBaseData](HandlerBase[T], ABC):
             return None
 
     @abstractmethod
-    async def _do_parse(self, task: T) -> list[RequestBaseData | StoreBaseData] | None:
+    async def _do_parse(self, task: T) -> list[RequestBaseData | StoreBaseData] | RequestBaseData | StoreBaseData | None:
         """
         @brief 执行实际解析逻辑（子类实现）
         @details 子类须在此方法中完成 HTML/JSON 解析，并构造完整结果列表后 return：
