@@ -222,7 +222,7 @@ __marimo__/
 CLAUDE.md
 /docs
 /.codemoss
-config.ini
+*.ini
 *.json
 scripts/
 cassettes/
